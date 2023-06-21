@@ -31,6 +31,8 @@ class TextRepository extends ServiceEntityRepository
         $stmt->executeQuery();
     }
 
+    // TODO: fix_db_fk_cascade_delete
+    // Once the cascade deletes are done, this shouldn't be necessary anymore.
     private function removeParsedData(int $textid): void
     {
         $this->exec_sql("delete from sentences where SeTxID = $textid");

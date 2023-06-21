@@ -134,6 +134,8 @@ class SqliteHelper {
 
     public static function clearDb() {
         // Clean out tables in ref-integrity order.
+        // This shouldn't matter as much once referential integrity is fixed.
+        // TODO: fix_db_fk_cascade_delete
         $tables = [
             "sentences",
             "texttokens",

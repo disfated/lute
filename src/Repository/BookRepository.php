@@ -31,6 +31,7 @@ class BookRepository extends ServiceEntityRepository
 
     private function removeParsedData(int $bookid): void
     {
+        // TODO: fix_db_fk_cascade_delete
         $this->exec_sql("delete from sentences where SeTxID in (select TxID from texts where TxBkID = $bookid)");
         $this->exec_sql("delete from texttokens where TokTxID in (select TxID from texts where TxBkID = $bookid)");
     }
