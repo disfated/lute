@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../db_helpers.php';
 require_once __DIR__ . '/../../DatabaseTestBase.php';
 
+use App\Utils\Connection;
 use App\Entity\Book;
 use App\Entity\Language;
 use App\Entity\TextTag;
@@ -45,8 +46,11 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         DbHelpers::assertRecordcountEquals("tags2", $tags2, "tags2");
     }
 
+    /** IMPORTANT - have to go the Connection::getFromEnvironment,
+     * because we need the pragma set! */
     private function exec($sql) {
-        DbHelpers::exec_sql($sql);
+        $conn = Connection::getFromEnvironment();
+        $conn->exec($sql);
     }
 
     /**
