@@ -32,6 +32,17 @@ class LanguageRepository extends ServiceEntityRepository
 
     public function remove(Language $entity, bool $flush = false): void
     {
+        // THIS IS REQUIRED.  Deleting a language also deletes Terms
+        // and Books, which should then cascade their deletions on to
+        // other entities deeper in the object graph.  Without the pragma,
+        // the deletes don't propagate throughout the object graph.
+        //
+        // NOTE it may be better to generalize this, per
+        // https://stackoverflow.com/questions/22924444/,
+        //   foreign-key-constraints-does-not-work-with-doctrine-symfony-and-sqlite
+        //   (famas23's answer).
+        $this->getEntityManager()->getConnection()->exec('PRAGMA foreign_keys = ON');
+
         $lgid = $entity->getLgID();
         $this->getEntityManager()->remove($entity);
 
