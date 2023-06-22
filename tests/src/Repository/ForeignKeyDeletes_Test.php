@@ -38,6 +38,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $this->term = $this->addTerms($this->english, 'term')[0];
         $this->termtag = TermTag::makeTermTag('termtag');
         $this->term->addTermTag($this->termtag);
+        $this->term->setCurrentImage('someimage.jpg');
         $this->term_repo->save($this->term, true);
 
         DbHelpers::assertRecordcountEquals("books", 1);
@@ -58,6 +59,11 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
 
     private function assertBookTablesEmpty() {
         foreach ([ 'books', 'texts', 'booktags', 'bookstats', 'sentences', 'texttokens' ] as $t)
+            DbHelpers::assertRecordcountEquals($t, 0, $t);
+    }
+
+    private function assertTermTablesEmpty() {
+        foreach ([ 'words', 'wordimages', 'wordflashmessages', 'wordparents', 'wordtags' ] as $t)
             DbHelpers::assertRecordcountEquals($t, 0, $t);
     }
 
