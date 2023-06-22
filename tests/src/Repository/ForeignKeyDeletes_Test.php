@@ -39,6 +39,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $this->termtag = TermTag::makeTermTag('termtag');
         $this->term->addTermTag($this->termtag);
         $this->term->setCurrentImage('someimage.jpg');
+        $this->term->setFlashMessage('flash!!');
         $this->term_repo->save($this->term, true);
 
         DbHelpers::assertRecordcountEquals("books", 1);
