@@ -8,6 +8,8 @@ use App\Entity\Book;
 use App\Entity\Language;
 use App\Entity\TextTag;
 use App\Entity\Text;
+use App\Entity\Term;
+use App\Entity\TermTag;
 
 /**
  * Overall tests for foreign key cascade deletes.
@@ -17,20 +19,27 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
 
     private $book;
     private $texttag;
+    private $term;
+    private $termtag;
 
     public function childSetUp() {
         $this->english = Language::makeEnglish();
         $this->language_repo->save($this->english, true);
 
-        $b = new Book();
-        $b->setTitle("hi");
-        $b->setLanguage($this->english);
+        $b = $this->make_book('hi', 'Hi there.', $this->english);
         $tt = new TextTag();
         $tt->setText("Hola");
         $b->addTag($tt);
         $this->book_repo->save($b, true);
         $this->book = $b;
         $this->texttag = $tt;
+
+        $this->term = $this->addTerms($this->english, 'term')[0];
+        $tt = new TermTag();
+        $tt->setText("termtag");
+        $this->term->addTermTag($tt);
+        $this->term_repo->save($this->term, true);
+        $this->termtag = $tt;
 
         $sql = "select BkID, BkTitle, BkLgID from books";
         $expected = [ "{$b->getId()}; hi; {$this->english->getLgId()}" ];
@@ -39,6 +48,9 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         DbHelpers::assertRecordcountEquals("books", 1);
         DbHelpers::assertRecordcountEquals("booktags", 1);
         DbHelpers::assertRecordcountEquals("tags2", 1);
+        DbHelpers::assertRecordcountEquals("words", 1);
+        DbHelpers::assertRecordcountEquals("wordtags", 1);
+        DbHelpers::assertRecordcountEquals("tags", 1);
     }
 
     private function assertBookTagsCounts(int $books, int $tags2, int $booktags) {
@@ -89,5 +101,48 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $this->exec("delete from tags2 where T2ID = {$this->texttag->getId()}");
         $this->assertBookTagsCounts(1, 0, 0);
     }
+
+    private function assertWordTagsCounts(int $words, int $tags, int $wordtags) {
+        DbHelpers::assertRecordcountEquals("words", $words, "words");
+        DbHelpers::assertRecordcountEquals("wordtags", $wordtags, "wordtags");
+        DbHelpers::assertRecordcountEquals("tags", $tags, "tags");
+    }
+
+    /**
+     * @group fk_wordtags
+     */
+    public function test_wordtags_word_model()
+    {
+        $this->term_repo->remove($this->term, true);
+        $this->assertWordTagsCounts(0, 1, 0);
+    }
+
+    /**
+     * @group fk_wordtags
+     */
+    public function test_wordtags_word_sql()
+    {
+        $this->exec("delete from words where WoID = {$this->term->getId()}");
+        $this->assertWordTagsCounts(0, 1, 0);
+    }
+
+    /**
+     * @group fk_wordtags
+     */
+    public function test_wordtags_tag_model()
+    {
+        $this->texttag_repo->remove($this->texttag, true);
+        $this->assertWordTagsCounts(1, 0, 0);
+    }
+
+    /**
+     * @group fk_wordtags
+     */
+    public function test_wordtags_tag_sql()
+    {
+        $this->exec("delete from tags where TgID = {$this->texttag->getId()}");
+        $this->assertWordTagsCounts(1, 0, 0);
+    }
+
 
 }
