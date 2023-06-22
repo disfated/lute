@@ -15,12 +15,13 @@ use App\Entity\Text;
 final class ForeignKeyDeletes_Test extends DatabaseTestBase
 {
 
+    private $book;
+    private $texttag;
+
     public function childSetUp() {
         $this->english = Language::makeEnglish();
         $this->language_repo->save($this->english, true);
-    }
 
-    private function setup_booktags_test() {
         $b = new Book();
         $b->setTitle("hi");
         $b->setLanguage($this->english);
@@ -28,6 +29,8 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $tt->setText("Hola");
         $b->addTag($tt);
         $this->book_repo->save($b, true);
+        $this->book = $b;
+        $this->texttag = $tt;
 
         $sql = "select BkID, BkTitle, BkLgID from books";
         $expected = [ "{$b->getId()}; hi; {$this->english->getLgId()}" ];
@@ -36,8 +39,6 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         DbHelpers::assertRecordcountEquals("books", 1);
         DbHelpers::assertRecordcountEquals("booktags", 1);
         DbHelpers::assertRecordcountEquals("tags2", 1);
-
-        return [ $b, $tt ];
     }
 
     private function assertBookTagsCounts(int $books, int $tags2, int $booktags) {
@@ -58,8 +59,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
      */
     public function test_booktags_book_model()
     {
-        [ $b, $tt ] = $this->setup_booktags_test();
-        $this->book_repo->remove($b, true);
+        $this->book_repo->remove($this->book, true);
         $this->assertBookTagsCounts(0, 1, 0);
     }
 
@@ -68,8 +68,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
      */
     public function test_booktags_book_sql()
     {
-        [ $b, $tt ] = $this->setup_booktags_test();
-        $this->exec("delete from books where BkID = {$b->getId()}");
+        $this->exec("delete from books where BkID = {$this->book->getId()}");
         $this->assertBookTagsCounts(0, 1, 0);
     }
 
@@ -78,8 +77,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
      */
     public function test_booktags_tag_model()
     {
-        [ $b, $tt ] = $this->setup_booktags_test();
-        $this->texttag_repo->remove($tt, true);
+        $this->texttag_repo->remove($this->texttag, true);
         $this->assertBookTagsCounts(1, 0, 0);
     }
 
@@ -88,8 +86,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
      */
     public function test_booktags_tag_sql()
     {
-        [ $b, $tt ] = $this->setup_booktags_test();
-        $this->exec("delete from tags2 where T2ID = {$tt->getId()}");
+        $this->exec("delete from tags2 where T2ID = {$this->texttag->getId()}");
         $this->assertBookTagsCounts(1, 0, 0);
     }
 
