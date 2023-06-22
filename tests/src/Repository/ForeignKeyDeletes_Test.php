@@ -26,24 +26,16 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $this->english = Language::makeEnglish();
         $this->language_repo->save($this->english, true);
 
-        $b = $this->make_book('hi', 'Hi there.', $this->english);
-        $tt = new TextTag();
-        $tt->setText("Hola");
-        $b->addTag($tt);
-        $this->book_repo->save($b, true);
-        $this->book = $b;
-        $this->texttag = $tt;
+        $this->book = $this->make_book('hi', 'Hi there.', $this->english);
+        $this->texttag = new TextTag();
+        $this->texttag->setText("Hola");
+        $this->book->addTag($this->texttag);
+        $this->book_repo->save($this->book, true);
 
         $this->term = $this->addTerms($this->english, 'term')[0];
-        $tt = new TermTag();
-        $tt->setText("termtag");
-        $this->term->addTermTag($tt);
+        $this->termtag = TermTag::makeTermTag('termtag');
+        $this->term->addTermTag($this->termtag);
         $this->term_repo->save($this->term, true);
-        $this->termtag = $tt;
-
-        $sql = "select BkID, BkTitle, BkLgID from books";
-        $expected = [ "{$b->getId()}; hi; {$this->english->getLgId()}" ];
-        DbHelpers::assertTableContains($sql, $expected);
 
         DbHelpers::assertRecordcountEquals("books", 1);
         DbHelpers::assertRecordcountEquals("booktags", 1);
@@ -76,7 +68,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
     }
 
     /**
-     * @group fk_booktags
+     * @group fk_booktags_1
      */
     public function test_booktags_book_sql()
     {
@@ -131,7 +123,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
      */
     public function test_wordtags_tag_model()
     {
-        $this->texttag_repo->remove($this->texttag, true);
+        $this->termtag_repo->remove($this->termtag, true);
         $this->assertWordTagsCounts(1, 0, 0);
     }
 
@@ -140,7 +132,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
      */
     public function test_wordtags_tag_sql()
     {
-        $this->exec("delete from tags where TgID = {$this->texttag->getId()}");
+        $this->exec("delete from tags where TgID = {$this->termtag->getId()}");
         $this->assertWordTagsCounts(1, 0, 0);
     }
 
