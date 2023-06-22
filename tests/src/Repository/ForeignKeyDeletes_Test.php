@@ -64,7 +64,7 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
     }
 
     private function assertTermTablesEmpty() {
-        foreach ([ 'words', 'wordimages', 'wordflashmessages', 'wordparents', 'wordtags' ] as $t)
+        foreach ([ 'words', 'wordimages', 'wordparents', 'wordtags', 'wordflashmessages' ] as $t)
             DbHelpers::assertRecordcountEquals($t, 0, $t);
     }
 
@@ -213,6 +213,26 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
             DbHelpers::assertRecordcountEquals($t, 1, $t . "after");
         DbHelpers::assertRecordcountEquals('wordparents', 0, 'no parent');
         DbHelpers::assertTableContains('select wotextlc from words', ['term'], 'term left');
+    }
+
+    /**
+     * @group fk_language_1
+     */
+    public function test_delete_language_model() {
+        $this->save_parent_with_term();
+        $this->language_repo->remove($this->english, true);
+        $this->assertTermTablesEmpty();
+        $this->assertBookTablesEmpty();
+    }
+
+    /**
+     * @group fk_language
+     */
+    public function test_delete_language_sql() {
+        $p = $this->save_parent_with_term();
+        $this->exec("delete from languages where LgID = {$this->english->getLgID()}");
+        $this->assertTermTablesEmpty();
+        $this->assertBookTablesEmpty();
     }
 
 }

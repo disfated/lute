@@ -26,7 +26,7 @@ class TermTag
     #[ORM\JoinTable(name: 'wordtags')]
     #[ORM\JoinColumn(name: 'WtTgID', referencedColumnName: 'TgID')]
     #[ORM\InverseJoinColumn(name: 'WtWoID', referencedColumnName: 'WoID')]
-    #[ORM\ManyToMany(targetEntity: Term::class, cascade: ['persist'])]
+    #[ORM\ManyToMany(targetEntity: Term::class, mappedBy:'termTags', cascade: ['persist'])]
     private Collection $Terms;
 
     public function getId(): ?int
