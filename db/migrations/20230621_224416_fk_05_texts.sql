@@ -62,7 +62,7 @@ ALTER TABLE new_texts RENAME TO texts;
 COMMIT;
 
 -- re-create indexes and triggers
--- n/a
+CREATE UNIQUE INDEX "TxBkIDTxOrder" ON "texts" ("TxBkID", "TxOrder");
 
 -- enable foreign key constraint check
 PRAGMA foreign_keys=on;
