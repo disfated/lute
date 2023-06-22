@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../DatabaseTestBase.php';
 
 use App\Utils\Connection;
 use App\Entity\Book;
+use App\Domain\BookStats;
 use App\Entity\Language;
 use App\Entity\TextTag;
 use App\Entity\Text;
@@ -31,6 +32,8 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $this->texttag->setText("Hola");
         $this->book->addTag($this->texttag);
         $this->book_repo->save($this->book, true);
+
+        BookStats::refresh($this->book_repo);
 
         $this->term = $this->addTerms($this->english, 'term')[0];
         $this->termtag = TermTag::makeTermTag('termtag');
