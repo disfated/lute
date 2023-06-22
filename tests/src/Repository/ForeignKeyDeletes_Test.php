@@ -155,5 +155,64 @@ final class ForeignKeyDeletes_Test extends DatabaseTestBase
         $this->assertWordTagsCounts(1, 0, 0);
     }
 
+    private function save_parent_with_term() {
+        $p = $this->addTerms($this->english, 'parent')[0];
+        $this->term->setParent($p);
+        $this->term_repo->save($this->term, true);  // save parent
+        foreach (['wordimages', 'wordflashmessages', 'wordparents', 'wordtags' ] as $t)
+            DbHelpers::assertRecordcountEquals($t, 1, $t . " before");
+        DbHelpers::assertTableContains('select wotextlc from words', ['parent', 'term'], 'parent and term');
+        return $p;
+    }
+
+    /**
+     * @group fk_parent
+     */
+    public function test_delete_word_with_parent_model() {
+        $p = $this->save_parent_with_term();
+        $this->term_repo->remove($this->term, true);
+
+        foreach (['wordimages', 'wordflashmessages', 'wordparents', 'wordtags' ] as $t)
+            DbHelpers::assertRecordcountEquals($t, 0, $t . "after");
+        DbHelpers::assertTableContains('select wotextlc from words', ['parent'], 'parent left');
+    }
+
+    /**
+     * @group fk_parent
+     */
+    public function test_delete_word_with_parent_sql() {
+        $p = $this->save_parent_with_term();
+        $this->exec("delete from words where WoID = {$this->term->getId()}");
+
+        foreach (['wordimages', 'wordflashmessages', 'wordparents', 'wordtags' ] as $t)
+            DbHelpers::assertRecordcountEquals($t, 0, $t . "after");
+        DbHelpers::assertTableContains('select wotextlc from words', ['parent'], 'parent left');
+    }
+
+    /**
+     * @group fk_parent
+     */
+    public function test_delete_parent_for_word_model() {
+        $p = $this->save_parent_with_term();
+        $this->term_repo->remove($p, true);
+
+        foreach (['wordimages', 'wordflashmessages', 'wordtags' ] as $t)
+            DbHelpers::assertRecordcountEquals($t, 1, $t . "after");
+        DbHelpers::assertRecordcountEquals('wordparents', 0, 'no parent');
+        DbHelpers::assertTableContains('select wotextlc from words', ['term'], 'term left');
+    }
+
+    /**
+     * @group fk_parent
+     */
+    public function test_delete_parent_for_word_sql() {
+        $p = $this->save_parent_with_term();
+        $this->exec("delete from words where WoID = {$p->getId()}");
+
+        foreach (['wordimages', 'wordflashmessages', 'wordtags' ] as $t)
+            DbHelpers::assertRecordcountEquals($t, 1, $t . "after");
+        DbHelpers::assertRecordcountEquals('wordparents', 0, 'no parent');
+        DbHelpers::assertTableContains('select wotextlc from words', ['term'], 'term left');
+    }
 
 }
