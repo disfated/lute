@@ -60,8 +60,18 @@ final class BookStats_Test extends DatabaseTestBase
             $statcount[$sid] = 0;
 
         // HACKING CODE -
-        // need to separate out calculation of renderable text items
-        // from the rest of the stuff, don't need many dependencies.
+        // TODO: separate out calculation of renderable text items
+        // from the rest of the stuff in the ReadingFacade.
+        // e.g, this could be something like:
+        // $rt = new RenderableText(reading_repo);
+        // needs reading_repo for getTextTokens, getTermsInText ...
+        // but maybe those should go elsewhere:
+        // ReadingRepo->getTextTokens change to $text->getTextTokens();
+        // ReadingRepo->getTermsinText just uses the term_repo anyway.
+        // So,
+        // $rt = new TextRenderableCalculator($term_repo);
+        // $rt->getRenderableSentences($text) -- is same as facade->getSentences(),
+        // and can be used for stats calc.
         $term_service = new TermService($this->term_repo);
         $rf = new ReadingFacade(
             $this->reading_repo,
@@ -70,13 +80,18 @@ final class BookStats_Test extends DatabaseTestBase
             $term_service,
             $this->termtag_repo
         );
+        // TODO: loop through all the texts in the book.
         foreach ($rf->getSentences($t) as $s) {
             $tis = array_filter($s->renderable(), fn($ti) => $ti->IsWord == 1);
             foreach ($tis as $ti) {
                 $sid = $ti->WoStatus ?? 0;
+                // TODO: rather than just count, should only count uniques.
+                // Track elements in array - might get memory-heavy - can copy
+                // the data needed (Text, WoStatus) into smaller structs.
                 $statcount[$sid] += 1;
             }
         }
+        // TODO: better way to handle status IDs - perhaps more public consts
         dump($statcount);
 
         $sql = "select 
