@@ -5,6 +5,8 @@ require_once __DIR__ . '/../../DatabaseTestBase.php';
 
 use App\Entity\Book;
 use App\Domain\BookStats;
+use App\Domain\TermService;
+use App\Domain\ReadingFacade;
 
 final class BookStats_Test extends DatabaseTestBase
 {
@@ -50,8 +52,32 @@ final class BookStats_Test extends DatabaseTestBase
     public function test_stats_calculates_rendered_text() {
         $t = $this->make_text("Hola.", "Tengo un gato.", $this->spanish);
         $b = $t->getBook();
-        $this->addTerms($this->spanish, [ "tengo un gato" ]);
+        $this->addTerms($this->spanish, [ "tengo un" ]);
         BookStats::refresh($this->book_repo);
+
+        $statcount = [];
+        foreach ([0, 1, 2, 3, 4, 5, 98, 99] as $sid)
+            $statcount[$sid] = 0;
+
+        // HACKING CODE -
+        // need to separate out calculation of renderable text items
+        // from the rest of the stuff, don't need many dependencies.
+        $term_service = new TermService($this->term_repo);
+        $rf = new ReadingFacade(
+            $this->reading_repo,
+            $this->text_repo,
+            $this->book_repo,
+            $term_service,
+            $this->termtag_repo
+        );
+        foreach ($rf->getSentences($t) as $s) {
+            $tis = array_filter($s->renderable(), fn($ti) => $ti->IsWord == 1);
+            foreach ($tis as $ti) {
+                $sid = $ti->WoStatus ?? 0;
+                $statcount[$sid] += 1;
+            }
+        }
+        dump($statcount);
 
         $sql = "select 
           BkID, wordcount, distinctterms,
