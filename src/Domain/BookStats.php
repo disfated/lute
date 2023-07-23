@@ -3,12 +3,14 @@
 namespace App\Domain;
 
 use App\Entity\Book;
+use App\Repository\BookRepository;
+use App\Repository\TermRepository;
 use App\Entity\Language;
 use App\Utils\Connection;
 
 class BookStats {
 
-    public static function refresh($book_repo) {
+    public static function refresh(BookRepository $book_repo, TermRepository $term_repo) {
         $conn = Connection::getFromEnvironment();
         $books = BookStats::booksToUpdate($conn, $book_repo);
         if (count($books) == 0)
@@ -24,7 +26,7 @@ class BookStats {
                 $books,
                 fn($b) => $b->getLanguage()->getLgID() == $langid);
             foreach ($langbooks as $b) {
-                $stats = BookStats::getStats($b, $conn);
+                $stats = BookStats::getStats($b, $term_repo, $conn);
                 BookStats::updateStats($b, $stats, $conn);
             }
         }
@@ -65,6 +67,7 @@ class BookStats {
 
     private static function getStats(
         Book $b,
+        TermRepository $term_repo,
         $conn
     )
     {
@@ -79,6 +82,9 @@ class BookStats {
         $lgid = $b->getLanguage()->getLgID();
         $bkid = $b->getID();
 
+        // Naive method of getting unknowns: just select terms.
+        // This doesn't work well because it doesn't take into
+        // account multi-word terms.
         $sql = "select count(distinct toktextlc)
 from texttokens
 inner join texts on txid = toktxid
@@ -90,6 +96,46 @@ group by txbkid";
         $unknowns = $count($sql);
         // dump($sql);
         // dump($unknowns);
+        /* */
+
+        /* */
+        $getUnknowns = function($text) use ($term_repo) {
+            $ss = \App\Domain\RenderableSentence::getSentences($text, $term_repo);
+            $rendered_unknowns = array_map(
+                fn($s) => array_filter(
+                    $s->renderable(),
+                    fn($ti) => $ti->IsWord == 1 && $ti->WoStatus == null
+                ),
+                $ss
+            );
+            return array_merge([], ...$rendered_unknowns);
+        };
+        $unknowns = [];
+        foreach ($b->getTexts() as $t) {
+            $unknowns[] = array_map(fn($u) => $u->TextLC, $getUnknowns($t));
+        }
+        $unknowns = array_merge([], ...$unknowns);
+        $unknowns = array_unique($unknowns);
+        // echo implode(', ', $unknowns);
+        $unknowns = count($unknowns);
+        /* */
+        
+        /*
+          // in case more stats detail is wanted ...
+        $statcount = [];
+        foreach ([0, 1, 2, 3, 4, 5, 98, 99] as $sid)
+            $statcount[$sid] = 0;
+
+        $ss = App\Domain\RenderableSentence::getSentences($t, $this->term_repo);
+        foreach ($ss as $s) {
+            $tis = array_filter($s->renderable(), fn($ti) => $ti->IsWord == 1);
+            foreach ($tis as $ti) {
+                $sid = $ti->WoStatus ?? 0;
+                $statcount[$sid] += 1;
+            }
+        }
+        dump($statcount);
+        */
 
         $sql = "select count(distinct toktextlc)
 from texttokens
