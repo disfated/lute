@@ -101,23 +101,25 @@ group by txbkid";
         /* */
         $getUnknowns = function($text) use ($term_repo) {
             $ss = \App\Domain\RenderableSentence::getSentences($text, $term_repo);
-            $rendered_unknowns = array_map(
-                fn($s) => array_filter(
-                    $s->renderable(),
-                    fn($ti) => $ti->IsWord == 1 && $ti->WoStatus == null
-                ),
-                $ss
-            );
-            return array_merge([], ...$rendered_unknowns);
+            $alltoks = array_map(fn($s) => $s->renderable(), $ss);
+            $alltoks = array_merge([], ...$alltoks);
+            $isUnknown = function($ti) { return $ti->IsWord == 1 && $ti->WoStatus == null; };
+            $renderedUnks = array_filter($alltoks, $isUnknown);
+            $renderedUnks = array_map(fn($ti) => $ti->TextLC, $renderedUnks);
+            return array_unique($renderedUnks);
         };
         $unknowns = [];
+        $ii = 0;
         foreach ($b->getTexts() as $t) {
-            $unknowns[] = array_map(fn($u) => $u->TextLC, $getUnknowns($t));
+            $ii += 1;
+            dump($ii);
+            $unknowns[] = $getUnknowns($t);
         }
         $unknowns = array_merge([], ...$unknowns);
         $unknowns = array_unique($unknowns);
         // echo implode(', ', $unknowns);
         $unknowns = count($unknowns);
+        dump('got count unk = ' . $unknowns);
         /* */
         
         /*
