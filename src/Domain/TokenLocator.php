@@ -55,14 +55,23 @@ class TokenLocator {
 
         $LCsubject = mb_strtolower($subject);
         $LCpatt = mb_strtolower($find_patt);
-        $pos = mb_strpos($LCsubject, $LCpatt, 0);
+
+        $curr_count_before = 0;
+        $curr_subject = $subject;
+        $curr_LCsubject = $LCsubject;
+
+        $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
 
         $termmatches = [];
         while ($pos !== false) {
-            $rtext = mb_substr($subject, $pos + $len_zws, $wordlen);
-            $i = TokenLocator::get_count_before($subject, $pos, $zws);
-            $termmatches[] = [ $rtext, $i ];
-            $pos = mb_strpos($LCsubject, $LCpatt, $pos + 1);
+            $rtext = mb_substr($curr_subject, $pos + $len_zws, $wordlen);
+            $i = TokenLocator::get_count_before($curr_subject, $pos, $zws);
+            $curr_count_before += $i;
+            $termmatches[] = [ $rtext, $curr_count_before ];
+
+            $curr_subject = mb_substr($curr_subject, $pos + $len_zws);
+            $curr_LCsubject = mb_substr($curr_LCsubject, $pos + $len_zws);
+            $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
         }
 
         return $termmatches;
