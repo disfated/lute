@@ -5,6 +5,7 @@ namespace App\Domain;
 use App\Entity\Book;
 use App\Repository\BookRepository;
 use App\Repository\TermRepository;
+use App\Domain\TokenCoverage;
 use App\Entity\Language;
 use App\Utils\Connection;
 
@@ -98,7 +99,7 @@ group by txbkid";
         // dump($unknowns);
         /* */
 
-        /* */
+        /*
         $getUnknowns = function($text) use ($term_repo) {
             $ss = \App\Domain\RenderableSentence::getSentences($text, $term_repo);
             $alltoks = array_map(fn($s) => $s->renderable(), $ss);
@@ -138,6 +139,10 @@ group by txbkid";
         }
         dump($statcount);
         */
+
+        $tc = new TokenCoverage();
+        $covstats = $tc->getStats($b);
+        $unknowns = $covstats[0];
 
         $sql = "select count(distinct toktextlc)
 from texttokens

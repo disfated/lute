@@ -26,18 +26,18 @@ class TokenCoverage {
 
     private function get_count_before($string, $pos, $zws): int {
         $beforesubstr = mb_substr($string, 0, $pos, 'UTF-8');
-        echo "\n";
-        echo "     get count, string = {$string} \n";
-        echo "     get count, pos = {$pos} \n";
-        echo "     get count, before = {$beforesubstr} \n";
+        // echo "\n";
+        // echo "     get count, string = {$string} \n";
+        // echo "     get count, pos = {$pos} \n";
+        // echo "     get count, before = {$beforesubstr} \n";
         if ($beforesubstr == '')
             return 0;
         $parts = explode($zws, $beforesubstr);
         $parts = array_filter($parts, fn($s) => $s != '');
-        echo "     get count, parts:\n ";
-        dump($parts);
+        // echo "     get count, parts:\n ";
+        // dump($parts);
         $n = count($parts);
-        echo "     get count, result = {$n} \n";
+        // echo "     get count, result = {$n} \n";
         return $n;
     }
 
@@ -71,7 +71,7 @@ class TokenCoverage {
             $pos += $wordlen + 2 * $len_zws;
             $curr_subject = mb_substr($curr_subject, $pos);
             $curr_LCsubject = mb_substr($curr_LCsubject, $pos);
-            echo "\nNext iteration with curr_LCsubject = {$curr_LCsubject}\n";
+            // echo "\nNext iteration with curr_LCsubject = {$curr_LCsubject}\n";
             $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
         }
     }
@@ -128,9 +128,9 @@ class TokenCoverage {
 
     public function getStats(Book $book) {
         $fulltext = $this->getFullText($book);
-        $parts = $this->getParts($fulltext);
-        dump($parts);
         $LC_fulltext = mb_strtolower($fulltext);
+        $parts = $this->getParts($LC_fulltext);
+        // dump($parts);
 
         $res = $this->getTermData($book);
         while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
@@ -140,8 +140,24 @@ class TokenCoverage {
             $this->addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus);
         }
 
-        dump($parts);
-        return 'todo';
+        // dump($parts);
+        $all_statuses = array_filter($parts, fn($e) => ! is_string($e));
+        $scount = array_count_values($all_statuses);
+        // dump($scount);
+        $remaining = array_filter($parts, fn($e) => is_string($e));
+
+        // Joining with a space, rather than '', because sometimes
+        // words would be joined together (e.g. "statusif").  Not sure
+        // why this was happening, can't be bothered to investigate
+        // further.
+        $remaining = implode(' ', $remaining);
+        $ptokens = $book->getLanguage()->getParsedTokens($remaining);
+        $ptwords = array_filter($ptokens, fn($p) => $p->isWord);
+        $ptwords = array_map(fn($p) => $p->token, $ptwords);
+        $ptwords = array_unique($ptwords);
+
+        $scount[0] = count($ptwords);
+        return $scount;
         // $remaining = array_filter(fn($s) => $s != null && $s != '', $this->parts);
         // dump($remaining);
     }
