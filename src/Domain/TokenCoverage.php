@@ -42,7 +42,7 @@ class TokenCoverage {
 
     // Using raw data instead of Term entity, thinking that it will be
     // less memory-intensive.
-    private function addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus) {
+    private function addCoverage($fulltext, $LC_fulltext, &$parts, $termTextLC, $termTokenCount, $termStatus) {
         $zws = mb_chr(0x200B);
         $len_zws = mb_strlen($zws);
         $tlc = $termTextLC;
@@ -60,11 +60,11 @@ class TokenCoverage {
 
         while ($pos !== false) {
             $rtext = mb_substr($curr_subject, $pos + $len_zws, $wordlen);
-            $cb = TokenLocator::get_count_before($curr_subject, $pos, $zws);
+            $cb = $this->get_count_before($curr_subject, $pos, $zws);
             $curr_index += $cb;
 
             for ($i = 0; $i < $termTokenCount; $i++) {
-                $this->parts[$curr_index + $i] = $termStatus;  // matched
+                $parts[$curr_index + $i] = $termStatus;  // matched
             }
 
             $curr_subject = mb_substr($curr_subject, $pos + $len_zws);
