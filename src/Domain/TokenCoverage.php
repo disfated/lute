@@ -2,9 +2,12 @@
 
 namespace App\Domain;
 
+use App\Entity\Book;
+
 /** Helper class for finding coverage of tokens for a given text string. */
 class TokenCoverage {
 
+    /*
     private string $text;
     private string $LCtext;
     private array $parts;
@@ -18,6 +21,7 @@ class TokenCoverage {
         $this->LCtext = mb_strtolower($text);
         $this->parts = $parts;
     }
+    */
 
     private function get_count_before($string, $pos, $zws): int {
         $beforesubstr = mb_substr($string, 0, $pos, 'UTF-8');
@@ -68,13 +72,23 @@ class TokenCoverage {
         }
     }
 
-    public function calcCoverage($terms) {
-        foreach ($terms as $t) {
-            $this->addCoverage($t);
+    public function getStats(Book $book) {
+        $fulltext = $this->getFullText($book);
+        $parts = $this->getParts($fulltext);
+        $LC_fulltext = mb_strtolower($fulltext);
+
+        $res = $this->getTermData($book);
+        while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
+            $termTextLC = $row['WoTextLC'];
+            $termTokenCount = intval($row['WoTokenCount']);
+            $termStatus = intval($row['WoStatus']);
+            $this->addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus);
         }
 
-        $remaining = array_filter(fn($s) => $s != null && $s != '', $this->parts);
-        dump($remaining);
+        dump($parts);
+        return 'todo';
+        // $remaining = array_filter(fn($s) => $s != null && $s != '', $this->parts);
+        // dump($remaining);
     }
 
 }
