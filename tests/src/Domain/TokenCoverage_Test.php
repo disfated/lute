@@ -7,6 +7,7 @@ use App\Entity\Book;
 use App\Domain\BookStats;
 use App\Domain\TermService;
 use App\Domain\ReadingFacade;
+use App\Domain\TokenCoverage;
 
 final class TokenCoverage_Test extends DatabaseTestBase
 {
@@ -21,14 +22,9 @@ final class TokenCoverage_Test extends DatabaseTestBase
         $b = $t->getBook();
         $this->addTerms($this->spanish, [ "tengo un" ]);
 
-        TODO test
-        $sql = "select 
-          BkID, wordcount, distinctterms,
-          distinctunknowns, unknownpercent
-          from bookstats";
-        DbHelpers::assertTableContains(
-            $sql,
-            [ "{$b->getId()}; 3; 3; 1; 33" ]);
+        $tc = new TokenCoverage();
+        $stats = $tc->getStats($b);
+        dump($stats);
     }
 
 }
