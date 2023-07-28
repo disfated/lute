@@ -90,7 +90,19 @@ class TokenCoverage {
         if (!$stmt->execute()) {
             throw new \Exception($stmt->error);
         }
-        return $stmt;
+        $record = $stmt->fetch(\PDO::FETCH_NUM);
+        $ret = null;
+        if ($record) { 
+            $ret = $record[0]; 
+        }
+        return $ret;
+    }
+
+    private function getParts($text) {
+        $zws = mb_chr(0x200B);
+        $parts = explode($zws, $text);
+        $parts = array_filter($parts, fn($s) => $s != '');
+        return $parts;
     }
 
     public function getStats(Book $book) {
