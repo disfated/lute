@@ -115,7 +115,7 @@ class TokenCoverage {
           from
           words
           where WoLgID = {$lgid}
-          order by WoTokenCount";
+          order by WoTokenCount, WoTextLC";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             throw new \Exception($conn->error);
@@ -135,6 +135,7 @@ class TokenCoverage {
         $res = $this->getTermData($book);
         while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
             $termTextLC = $row['WoTextLC'];
+            dump('checking term ' . $termTextLC);
             $termTokenCount = intval($row['WoTokenCount']);
             $termStatus = intval($row['WoStatus']);
             $this->addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus);
