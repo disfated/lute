@@ -99,9 +99,10 @@ group by txbkid";
         // dump($unknowns);
         /* */
 
-        /*
+        /* */
         $getUnknowns = function($text) use ($term_repo) {
-            $ss = \App\Domain\RenderableSentence::getSentences($text, $term_repo);
+            $paras = \App\Domain\RenderableSentence::getParagraphs($text, $term_repo);
+            $ss = array_merge([], ...$paras);
             $alltoks = array_map(fn($s) => $s->renderable(), $ss);
             $alltoks = array_merge([], ...$alltoks);
             $isUnknown = function($ti) { return $ti->IsWord == 1 && $ti->WoStatus == null; };
@@ -113,14 +114,14 @@ group by txbkid";
         $ii = 0;
         foreach ($b->getTexts() as $t) {
             $ii += 1;
-            dump($ii);
+            // dump($ii);
             $unknowns[] = $getUnknowns($t);
         }
         $unknowns = array_merge([], ...$unknowns);
         $unknowns = array_unique($unknowns);
         // echo implode(', ', $unknowns);
         $unknowns = count($unknowns);
-        dump('got count unk = ' . $unknowns);
+        // dump('got count unk = ' . $unknowns);
         /* */
         
         /*
@@ -140,9 +141,12 @@ group by txbkid";
         dump($statcount);
         */
 
+        /*
+          // times out, hardly gets anywhere
         $tc = new TokenCoverage();
         $covstats = $tc->getStats($b);
         $unknowns = $covstats[0];
+        */
 
         $sql = "select count(distinct toktextlc)
 from texttokens
