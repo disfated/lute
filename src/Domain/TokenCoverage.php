@@ -26,17 +26,17 @@ class TokenCoverage {
 
     private function get_count_before($string, $pos, $zws): int {
         $beforesubstr = mb_substr($string, 0, $pos, 'UTF-8');
-        // echo "     get count, string = {$string} \n";
-        // echo "     get count, pos = {$pos} \n";
-        // echo "     get count, before = {$beforesubstr} \n";
+        echo "     get count, string = {$string} \n";
+        echo "     get count, pos = {$pos} \n";
+        echo "     get count, before = {$beforesubstr} \n";
         if ($beforesubstr == '')
             return 0;
         $parts = explode($zws, $beforesubstr);
-        $parts = array_filter($parts, fn($s) => $s != '');
-        // echo "     get count, parts:\n ";
-        // dump($parts) . "\n";
+        // $parts = array_filter($parts, fn($s) => $s != '');
+        echo "     get count, parts:\n ";
+        dump($parts) . "\n";
         $n = count($parts);
-        // echo "     get count, result = {$n} \n";
+        echo "     get count, result = {$n} \n";
         return $n;
     }
 
@@ -59,7 +59,6 @@ class TokenCoverage {
         $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
 
         while ($pos !== false) {
-            $rtext = mb_substr($curr_subject, $pos + $len_zws, $wordlen);
             $cb = $this->get_count_before($curr_subject, $pos, $zws);
             $curr_index += $cb;
 
@@ -69,6 +68,7 @@ class TokenCoverage {
 
             $curr_subject = mb_substr($curr_subject, $pos + $len_zws);
             $curr_LCsubject = mb_substr($curr_LCsubject, $pos + $len_zws);
+
             $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
         }
     }
