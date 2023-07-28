@@ -42,18 +42,18 @@ class TokenCoverage {
 
     // Using raw data instead of Term entity, thinking that it will be
     // less memory-intensive.
-    private function addCoverage(string $term_text_lc, int $term_token_count) {
+    private function addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus) {
         $zws = mb_chr(0x200B);
         $len_zws = mb_strlen($zws);
-        $tlc = $term_text_lc;
+        $tlc = $termTextLC;
         $find_patt = $zws . $tlc . $zws;
         $wordlen = mb_strlen($tlc);
 
-        $LCsubject = $this->LCtext;
+        $LCsubject = $LC_fulltext;
         $LCpatt = $find_patt;
 
         $curr_index = 0;
-        $curr_subject = $this->text;
+        $curr_subject = $fulltext;
         $curr_LCsubject = $LCsubject;
 
         $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
@@ -63,8 +63,8 @@ class TokenCoverage {
             $cb = TokenLocator::get_count_before($curr_subject, $pos, $zws);
             $curr_index += $cb;
 
-            for ($i = 0; $i < $term_token_count; $i++) {
-                $this->parts[$curr_index + $i] = null;  // matched
+            for ($i = 0; $i < $termTokenCount; $i++) {
+                $this->parts[$curr_index + $i] = $termStatus;  // matched
             }
 
             $curr_subject = mb_substr($curr_subject, $pos + $len_zws);
@@ -103,6 +103,24 @@ class TokenCoverage {
         $parts = explode($zws, $text);
         $parts = array_filter($parts, fn($s) => $s != '');
         return $parts;
+    }
+
+    private function getTermData(Book $book) {
+        $conn = Connection::getFromEnvironment();
+        $lgid = $book->getLanguage()->getLgID();
+        $sql = "select WoTextLC, WoTokenCount, WoStatus
+          from
+          words
+          where WoLgID = {$lgid}
+          order by WoTokenCount";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new \Exception($conn->error);
+        }
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+        return $stmt;
     }
 
     public function getStats(Book $book) {
