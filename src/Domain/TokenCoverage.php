@@ -3,6 +3,7 @@
 namespace App\Domain;
 
 use App\Entity\Book;
+use App\Utils\Connection;
 
 /** Helper class for finding coverage of tokens for a given text string. */
 class TokenCoverage {
@@ -70,6 +71,26 @@ class TokenCoverage {
             $curr_LCsubject = mb_substr($curr_LCsubject, $pos + $len_zws);
             $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
         }
+    }
+
+    private function getFullText(Book $book) {
+        $conn = Connection::getFromEnvironment();
+        $bkid = $book->getId();
+        $sql = "select GROUP_CONCAT(SeText, '')
+          from
+          sentences
+          inner join texts on TxID = SeTxID
+          inner join books on BkID = TxBkID
+          where BkID = {$bkid}
+          order by SeID";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new \Exception($conn->error);
+        }
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+        return $stmt;
     }
 
     public function getStats(Book $book) {
