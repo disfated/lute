@@ -26,15 +26,16 @@ class TokenCoverage {
 
     private function get_count_before($string, $pos, $zws): int {
         $beforesubstr = mb_substr($string, 0, $pos, 'UTF-8');
+        echo "\n";
         echo "     get count, string = {$string} \n";
         echo "     get count, pos = {$pos} \n";
         echo "     get count, before = {$beforesubstr} \n";
         if ($beforesubstr == '')
             return 0;
         $parts = explode($zws, $beforesubstr);
-        // $parts = array_filter($parts, fn($s) => $s != '');
+        $parts = array_filter($parts, fn($s) => $s != '');
         echo "     get count, parts:\n ";
-        dump($parts) . "\n";
+        dump($parts);
         $n = count($parts);
         echo "     get count, result = {$n} \n";
         return $n;
@@ -65,10 +66,12 @@ class TokenCoverage {
             for ($i = 0; $i < $termTokenCount; $i++) {
                 $parts[$curr_index + $i] = $termStatus;  // matched
             }
+            $curr_index += $termTokenCount;
 
-            $curr_subject = mb_substr($curr_subject, $pos + $len_zws);
-            $curr_LCsubject = mb_substr($curr_LCsubject, $pos + $len_zws);
-
+            $pos += $wordlen + 2 * $len_zws;
+            $curr_subject = mb_substr($curr_subject, $pos);
+            $curr_LCsubject = mb_substr($curr_LCsubject, $pos);
+            echo "\nNext iteration with curr_LCsubject = {$curr_LCsubject}\n";
             $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
         }
     }
@@ -102,7 +105,7 @@ class TokenCoverage {
         $zws = mb_chr(0x200B);
         $parts = explode($zws, $text);
         $parts = array_filter($parts, fn($s) => $s != '');
-        return $parts;
+        return array_values($parts);
     }
 
     private function getTermData(Book $book) {
@@ -126,6 +129,7 @@ class TokenCoverage {
     public function getStats(Book $book) {
         $fulltext = $this->getFullText($book);
         $parts = $this->getParts($fulltext);
+        dump($parts);
         $LC_fulltext = mb_strtolower($fulltext);
 
         $res = $this->getTermData($book);

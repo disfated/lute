@@ -18,7 +18,7 @@ final class TokenCoverage_Test extends DatabaseTestBase
     }
 
     public function test_stats_calculates_rendered_text() {
-        $t = $this->make_text("Hola.", "Tengo un gato.", $this->spanish);
+        $t = $this->make_text("Hola.", "Tengo un gato.  Tengo un perro.", $this->spanish);
         $b = $t->getBook();
         $this->addTerms($this->spanish, [ "tengo un" ]);
 
