@@ -125,7 +125,7 @@ class TokenCoverage {
         if (!$stmt->execute()) {
             throw new \Exception($stmt->error);
         }
-        return $stmt;
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP);
     }
 
     public function getStats_OLD(Book $book) {
@@ -173,11 +173,18 @@ class TokenCoverage {
 
         $zws = mb_chr(0x200B);
 
-        $res = $this->getGroupedTermData($book);
-        $tokcount_status_to_terms = $res->fetchAll(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP);
+        $tokcount_status_to_terms = $this->getGroupedTermData($book);
         dump($tokcount_status_to_terms);
 
+        $tokcount_statuses = array_keys($tokcount_status_to_terms);
+        $tokcount_statuses = array_map(
+            fn($a) => array_map(fn($s) => intval($s), explode('_', $a)),
+            $tokcount_statuses
+        );
+        dump($tokcount_statuses);
+        
         foreach (array_keys($tokcount_status_to_terms) as $k) {
+            // $k = $tokcount . '_' . $status;
             $terms = $tokcount_status_to_terms[$k];
             [ $tokcount, $status ] = array_map(fn($s) => intval($s), explode('_', $k));
             $replstring = $zws . str_repeat('LUTE' . $status . $zws, $tokcount);
