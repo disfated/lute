@@ -176,12 +176,12 @@ class TokenCoverage {
         // Returns array of arrays, inner array = [ WoTokenCount,
         // WoStatus, WoTextLC ];
         $tdata = $this->getAllTermData($book);
-        dump($tdata);
+        // dump($tdata);
 
         $cnum = 0;
         foreach (array_chunk($tdata, 500) as $chunk) {
             $cnum += 1;
-            dump('chunk ' . $cnum);
+            // dump('chunk ' . $cnum);
             $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
             $replarray = array_map(
                 fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
@@ -189,7 +189,7 @@ class TokenCoverage {
             );
             $LC_fulltext = str_replace($termarray, $replarray, $LC_fulltext);
         }
-        dump($LC_fulltext);
+        // dump($LC_fulltext);
 
         $remainingtokens = explode($zws, $LC_fulltext);
         $allstatuses = array_map(fn($a) => $a[1], $tdata);
@@ -206,9 +206,9 @@ class TokenCoverage {
             );
             $scounts[$status] = count($toks);
         }
-        dump('---');
-        dump($allstatuses);
-        dump($scounts);
+        // dump('---');
+        // dump($allstatuses);
+        // dump($scounts);
 
         $remaining = $remainingtokens;
 
@@ -223,7 +223,7 @@ class TokenCoverage {
         $ptwords = array_unique($ptwords);
 
         $scounts[0] = count($ptwords);
-        dump($scounts);
+        // dump($scounts);
         return $scounts;
         // $remaining = array_filter(fn($s) => $s != null && $s != '', $this->parts);
         // dump($remaining);

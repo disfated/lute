@@ -99,7 +99,7 @@ group by txbkid";
         // dump($unknowns);
         /* */
 
-        /* */
+        /*
         $getUnknowns = function($text) use ($term_repo) {
             $paras = \App\Domain\RenderableSentence::getParagraphs($text, $term_repo);
             $ss = array_merge([], ...$paras);
@@ -141,12 +141,12 @@ group by txbkid";
         dump($statcount);
         */
 
-        /*
+        /* */
           // times out, hardly gets anywhere
         $tc = new TokenCoverage();
         $covstats = $tc->getStats($b);
         $unknowns = $covstats[0];
-        */
+        /* */
 
         $sql = "select count(distinct toktextlc)
 from texttokens
