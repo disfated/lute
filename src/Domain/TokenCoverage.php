@@ -150,6 +150,23 @@ class TokenCoverage {
         return $stmt->fetchAll(\PDO::FETCH_NUM);
     }
 
+    private function getTermDataInString(Book $book, string $LC_fulltext) {
+        $conn = Connection::getFromEnvironment();
+        $lgid = $book->getLanguage()->getLgID();
+        $sql = "select WoTokenCount, WoStatus, WoTextLC
+          from
+          words
+          where WoLgID = {$lgid}
+          and instr(:stringlc, char(0x200B) || WoTextLC || char(0x200B)) > 0;
+          order by WoTokenCount DESC, WoTextLC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':stringlc', $LC_fulltext, \PDO::PARAM_STR);
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+        return $stmt->fetchAll(\PDO::FETCH_NUM);
+    }
+    
     public function getStats_OLD(Book $book) {
         $fulltext = $this->getFullText($book);
         $LC_fulltext = mb_strtolower($fulltext);
@@ -198,15 +215,16 @@ class TokenCoverage {
 
         $snum = 0;
         $processed = [];
-        foreach (array_chunk($sentences, 1000) as $sgroup) {
+        foreach (array_chunk($sentences, 10) as $sgroup) {
             $fulltext = implode($zws, $sgroup);
             $LC_fulltext = mb_strtolower($fulltext);
+            $terms_in_sgroup = $this->getTermDataInString($book, $LC_fulltext);
             $snum += 1;
-            dump('sentence group ' . $snum);
 
             $cnum = 0;
-            foreach (array_chunk($tdata, 1000) as $chunk) {
+            foreach (array_chunk($terms_in_sgroup, 1000) as $chunk) {
                 $cnum += 1;
+                dump('sgroup ' . $snum . ', term group ' . $cnum);
                 $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
                 $replarray = array_map(
                     fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
