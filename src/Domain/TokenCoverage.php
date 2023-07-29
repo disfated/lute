@@ -64,12 +64,15 @@ class TokenCoverage {
         $conn = Connection::getFromEnvironment();
         $bkid = $book->getId();
         $sql = "select GROUP_CONCAT(SeText, '')
-          from
-          sentences
-          inner join texts on TxID = SeTxID
-          inner join books on BkID = TxBkID
-          where BkID = {$bkid}
-          order by SeID";
+          from (
+            select SeText from
+            sentences
+            inner join texts on TxID = SeTxID
+            inner join books on BkID = TxBkID
+            where BkID = {$bkid}
+            order by SeID
+            limit 100
+          ) src";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             throw new \Exception($conn->error);
@@ -167,9 +170,11 @@ class TokenCoverage {
 
     public function getStats(Book $book) {
         $fulltext = $this->getFullText($book);
+        // echo('here is the fulltext ... NOT');
+        // dump("WHTITITITI");
+        // return [ 0 => 666 ];
+
         $LC_fulltext = mb_strtolower($fulltext);
-        $parts = $this->getParts($LC_fulltext);
-        // dump($parts);
 
         $zws = mb_chr(0x200B);
 
@@ -179,7 +184,7 @@ class TokenCoverage {
         // dump($tdata);
 
         $cnum = 0;
-        foreach (array_chunk($tdata, 50) as $chunk) {
+        foreach (array_chunk($tdata, 1000) as $chunk) {
             $cnum += 1;
             dump('chunk ' . $cnum);
             $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
@@ -187,9 +192,9 @@ class TokenCoverage {
                 fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
                 $chunk
             );
-            dump('doing replace');
+            // dump('doing replace');
             $LC_fulltext = str_replace($termarray, $replarray, $LC_fulltext);
-            dump('done replace');
+            // dump('done replace');
         }
         // dump($LC_fulltext);
 
