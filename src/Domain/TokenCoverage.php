@@ -182,17 +182,34 @@ class TokenCoverage {
             $tokcount_statuses
         );
         dump($tokcount_statuses);
-        
-        foreach (array_keys($tokcount_status_to_terms) as $k) {
-            // $k = $tokcount . '_' . $status;
-            $terms = $tokcount_status_to_terms[$k];
-            [ $tokcount, $status ] = array_map(fn($s) => intval($s), explode('_', $k));
+
+        foreach ($tokcount_statuses as [ $tokcount, $status ]) {
+            $k = $tokcount . '_' . $status;
+            $terms = array_map(
+                fn($s) => $zws . $s . $zws,
+                $tokcount_status_to_terms[$k]
+            );
             $replstring = $zws . str_repeat('LUTE' . $status . $zws, $tokcount);
             $replarray = array_fill(0, count($terms), $replstring);
 
             $LC_fulltext = str_replace($terms, $replarray, $LC_fulltext);
         }
         dump($LC_fulltext);
+
+        $alltokens = explode($zws, $LC_fulltext);
+        $allstatuses = array_map(fn($a) => $a[1], $tokcount_statuses);
+        $allstatuses = array_unique($allstatuses);
+        $scounts = [];
+        foreach ($allstatuses as $status) {
+            $toks = array_filter(
+                $alltokens,
+                fn($s) => $s == 'LUTE' . $status
+            );
+            $scounts[$status] = count($toks);
+        }
+        dump($allstatuses);
+
+
         return 'todo';
 
         while($row = $res->fetch(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP)) {
