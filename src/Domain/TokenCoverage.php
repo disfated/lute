@@ -8,22 +8,6 @@ use App\Utils\Connection;
 /** Helper class for finding coverage of tokens for a given text string. */
 class TokenCoverage {
 
-    /*
-    private string $text;
-    private string $LCtext;
-    private array $parts;
-
-    public function __construct(string $text) {
-        $zws = mb_chr(0x200B);
-        $parts = explode($zws, $text);
-        $parts = array_filter($parts, fn($s) => $s != '');
-
-        $this->text = $text;
-        $this->LCtext = mb_strtolower($text);
-        $this->parts = $parts;
-    }
-    */
-
     private function get_count_before($string, $pos, $zws): int {
         $beforesubstr = mb_substr($string, 0, $pos, 'UTF-8');
         // echo "\n";
