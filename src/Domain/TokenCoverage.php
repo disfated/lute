@@ -178,7 +178,10 @@ class TokenCoverage {
         $tdata = $this->getAllTermData($book);
         dump($tdata);
 
+        $cnum = 0;
         foreach (array_chunk($tdata, 500) as $chunk) {
+            $cnum += 1;
+            dump('chunk ' . $cnum);
             $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
             $replarray = array_map(
                 fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
@@ -188,14 +191,18 @@ class TokenCoverage {
         }
         dump($LC_fulltext);
 
-        $alltokens = explode($zws, $LC_fulltext);
+        $remainingtokens = explode($zws, $LC_fulltext);
         $allstatuses = array_map(fn($a) => $a[1], $tdata);
         $allstatuses = array_unique($allstatuses);
         $scounts = [];
         foreach ($allstatuses as $status) {
             $toks = array_filter(
-                $alltokens,
+                $remainingtokens,
                 fn($s) => $s == 'LUTE' . $status
+            );
+            $remainingtokens = array_filter(
+                $remainingtokens,
+                fn($s) => $s != 'LUTE' . $status
             );
             $scounts[$status] = count($toks);
         }
@@ -203,22 +210,7 @@ class TokenCoverage {
         dump($allstatuses);
         dump($scounts);
 
-
-        return 'todo';
-
-        while($row = $res->fetch(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP)) {
-            $termTextLC = $row['WoTextLC'];
-            dump('checking term ' . $termTextLC);
-            $termTokenCount = intval($row['WoTokenCount']);
-            $termStatus = intval($row['WoStatus']);
-            $this->addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus);
-        }
-
-        // dump($parts);
-        $all_statuses = array_filter($parts, fn($e) => ! is_string($e));
-        $scount = array_count_values($all_statuses);
-        // dump($scount);
-        $remaining = array_filter($parts, fn($e) => is_string($e));
+        $remaining = $remainingtokens;
 
         // Joining with a space, rather than '', because sometimes
         // words would be joined together (e.g. "statusif").  Not sure
@@ -230,8 +222,9 @@ class TokenCoverage {
         $ptwords = array_map(fn($p) => $p->token, $ptwords);
         $ptwords = array_unique($ptwords);
 
-        $scount[0] = count($ptwords);
-        return $scount;
+        $scounts[0] = count($ptwords);
+        dump($scounts);
+        return $scounts;
         // $remaining = array_filter(fn($s) => $s != null && $s != '', $this->parts);
         // dump($remaining);
     }
