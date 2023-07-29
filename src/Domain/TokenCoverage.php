@@ -110,7 +110,25 @@ class TokenCoverage {
         return $stmt;
     }
 
-    public function getStats(Book $book) {
+    private function getGroupedTermData(Book $book) {
+        $conn = Connection::getFromEnvironment();
+        $lgid = $book->getLanguage()->getLgID();
+        $sql = "select WoTokenCount || '_' || WoStatus as CountStatus, WoTextLC
+          from
+          words
+          where WoLgID = {$lgid}
+          order by WoTokenCount DESC, WoTextLC";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new \Exception($conn->error);
+        }
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+        return $stmt;
+    }
+
+    public function getStats_OLD(Book $book) {
         $fulltext = $this->getFullText($book);
         $LC_fulltext = mb_strtolower($fulltext);
         $parts = $this->getParts($LC_fulltext);
@@ -118,6 +136,59 @@ class TokenCoverage {
 
         $res = $this->getTermData($book);
         while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
+            $termTextLC = $row['WoTextLC'];
+            dump('checking term ' . $termTextLC);
+            $termTokenCount = intval($row['WoTokenCount']);
+            $termStatus = intval($row['WoStatus']);
+            $this->addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus);
+        }
+
+        // dump($parts);
+        $all_statuses = array_filter($parts, fn($e) => ! is_string($e));
+        $scount = array_count_values($all_statuses);
+        // dump($scount);
+        $remaining = array_filter($parts, fn($e) => is_string($e));
+
+        // Joining with a space, rather than '', because sometimes
+        // words would be joined together (e.g. "statusif").  Not sure
+        // why this was happening, can't be bothered to investigate
+        // further.
+        $remaining = implode(' ', $remaining);
+        $ptokens = $book->getLanguage()->getParsedTokens($remaining);
+        $ptwords = array_filter($ptokens, fn($p) => $p->isWord);
+        $ptwords = array_map(fn($p) => $p->token, $ptwords);
+        $ptwords = array_unique($ptwords);
+
+        $scount[0] = count($ptwords);
+        return $scount;
+        // $remaining = array_filter(fn($s) => $s != null && $s != '', $this->parts);
+        // dump($remaining);
+    }
+
+    public function getStats(Book $book) {
+        $fulltext = $this->getFullText($book);
+        $LC_fulltext = mb_strtolower($fulltext);
+        $parts = $this->getParts($LC_fulltext);
+        // dump($parts);
+
+        $zws = mb_chr(0x200B);
+
+        $res = $this->getGroupedTermData($book);
+        $tokcount_status_to_terms = $res->fetchAll(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP);
+        dump($tokcount_status_to_terms);
+
+        foreach (array_keys($tokcount_status_to_terms) as $k) {
+            $terms = $tokcount_status_to_terms[$k];
+            [ $tokcount, $status ] = array_map(fn($s) => intval($s), explode('_', $k));
+            $replstring = $zws . str_repeat('LUTE' . $status . $zws, $tokcount);
+            $replarray = array_fill(0, count($terms), $replstring);
+
+            $LC_fulltext = str_replace($terms, $replarray, $LC_fulltext);
+        }
+        dump($LC_fulltext);
+        return 'todo';
+
+        while($row = $res->fetch(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP)) {
             $termTextLC = $row['WoTextLC'];
             dump('checking term ' . $termTextLC);
             $termTokenCount = intval($row['WoTokenCount']);
