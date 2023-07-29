@@ -110,10 +110,10 @@ class TokenCoverage {
         return $stmt;
     }
 
-    private function getGroupedTermData(Book $book) {
+    private function getAllTermData(Book $book) {
         $conn = Connection::getFromEnvironment();
         $lgid = $book->getLanguage()->getLgID();
-        $sql = "select WoTokenCount || '_' || WoStatus as CountStatus, WoTextLC
+        $sql = "select WoTokenCount, WoStatus, WoTextLC
           from
           words
           where WoLgID = {$lgid}
@@ -125,7 +125,7 @@ class TokenCoverage {
         if (!$stmt->execute()) {
             throw new \Exception($stmt->error);
         }
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN|\PDO::FETCH_GROUP);
+        return $stmt->fetchAll(\PDO::FETCH_NUM);
     }
 
     public function getStats_OLD(Book $book) {
@@ -173,31 +173,23 @@ class TokenCoverage {
 
         $zws = mb_chr(0x200B);
 
-        $tokcount_status_to_terms = $this->getGroupedTermData($book);
-        dump($tokcount_status_to_terms);
+        // Returns array of arrays, inner array = [ WoTokenCount,
+        // WoStatus, WoTextLC ];
+        $tdata = $this->getAllTermData($book);
+        dump($tdata);
 
-        $tokcount_statuses = array_keys($tokcount_status_to_terms);
-        $tokcount_statuses = array_map(
-            fn($a) => array_map(fn($s) => intval($s), explode('_', $a)),
-            $tokcount_statuses
-        );
-        dump($tokcount_statuses);
-
-        foreach ($tokcount_statuses as [ $tokcount, $status ]) {
-            $k = $tokcount . '_' . $status;
-            $terms = array_map(
-                fn($s) => $zws . $s . $zws,
-                $tokcount_status_to_terms[$k]
+        foreach (array_chunk($tdata, 500) as $chunk) {
+            $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
+            $replarray = array_map(
+                fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
+                $chunk
             );
-            $replstring = $zws . str_repeat('LUTE' . $status . $zws, $tokcount);
-            $replarray = array_fill(0, count($terms), $replstring);
-
-            $LC_fulltext = str_replace($terms, $replarray, $LC_fulltext);
+            $LC_fulltext = str_replace($termarray, $replarray, $LC_fulltext);
         }
         dump($LC_fulltext);
 
         $alltokens = explode($zws, $LC_fulltext);
-        $allstatuses = array_map(fn($a) => $a[1], $tokcount_statuses);
+        $allstatuses = array_map(fn($a) => $a[1], $tdata);
         $allstatuses = array_unique($allstatuses);
         $scounts = [];
         foreach ($allstatuses as $status) {
@@ -207,7 +199,9 @@ class TokenCoverage {
             );
             $scounts[$status] = count($toks);
         }
+        dump('---');
         dump($allstatuses);
+        dump($scounts);
 
 
         return 'todo';
