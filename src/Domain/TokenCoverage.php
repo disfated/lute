@@ -88,6 +88,25 @@ class TokenCoverage {
         return $ret;
     }
 
+    private function getSentences(Book $book) {
+        $conn = Connection::getFromEnvironment();
+        $bkid = $book->getId();
+        $sql = "select SeText from
+            sentences
+            inner join texts on TxID = SeTxID
+            inner join books on BkID = TxBkID
+            where BkID = {$bkid}
+            order by SeID";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new \Exception($conn->error);
+        }
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN, 0);
+    }
+
     private function getParts($text) {
         $zws = mb_chr(0x200B);
         $parts = explode($zws, $text);
@@ -169,13 +188,7 @@ class TokenCoverage {
     }
 
     public function getStats(Book $book) {
-        $fulltext = $this->getFullText($book);
-        // echo('here is the fulltext ... NOT');
-        // dump("WHTITITITI");
-        // return [ 0 => 666 ];
-
-        $LC_fulltext = mb_strtolower($fulltext);
-
+        $sentences = $this->getSentences($book);
         $zws = mb_chr(0x200B);
 
         // Returns array of arrays, inner array = [ WoTokenCount,
@@ -183,20 +196,31 @@ class TokenCoverage {
         $tdata = $this->getAllTermData($book);
         // dump($tdata);
 
-        $cnum = 0;
-        foreach (array_chunk($tdata, 1000) as $chunk) {
-            $cnum += 1;
-            dump('chunk ' . $cnum);
-            $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
-            $replarray = array_map(
-                fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
-                $chunk
-            );
-            // dump('doing replace');
-            $LC_fulltext = str_replace($termarray, $replarray, $LC_fulltext);
-            // dump('done replace');
+        $snum = 0;
+        $processed = [];
+        foreach (array_chunk($sentences, 1000) as $sgroup) {
+            $fulltext = implode($zws, $sgroup);
+            $LC_fulltext = mb_strtolower($fulltext);
+            $snum += 1;
+            dump('sentence group ' . $snum);
+
+            $cnum = 0;
+            foreach (array_chunk($tdata, 1000) as $chunk) {
+                $cnum += 1;
+                $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
+                $replarray = array_map(
+                    fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
+                    $chunk
+                );
+                // dump('doing replace');
+                $LC_fulltext = str_replace($termarray, $replarray, $LC_fulltext);
+                // dump('done replace');
+            }
+
+            $processed[] = $LC_fulltext;
         }
-        // dump($LC_fulltext);
+
+        $LC_fulltext = implode('', $processed);
 
         $remainingtokens = explode($zws, $LC_fulltext);
         $allstatuses = array_map(fn($a) => $a[1], $tdata);
