@@ -179,15 +179,17 @@ class TokenCoverage {
         // dump($tdata);
 
         $cnum = 0;
-        foreach (array_chunk($tdata, 500) as $chunk) {
+        foreach (array_chunk($tdata, 50) as $chunk) {
             $cnum += 1;
-            // dump('chunk ' . $cnum);
+            dump('chunk ' . $cnum);
             $termarray = array_map(fn($c) => $zws . $c[2] . $zws, $chunk);
             $replarray = array_map(
                 fn($c) => $zws . str_repeat('LUTE' . $c[1] . $zws, intval($c[0])),
                 $chunk
             );
+            dump('doing replace');
             $LC_fulltext = str_replace($termarray, $replarray, $LC_fulltext);
+            dump('done replace');
         }
         // dump($LC_fulltext);
 
