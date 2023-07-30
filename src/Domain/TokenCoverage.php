@@ -122,14 +122,15 @@ class TokenCoverage {
                 $renderable
             );
 
-            dump('text times:');
-            dump($textitems);
+            // dump('text times:');
+            // dump($textitems);
             $unks[] = $this->getUniqueUnknowns($textitems);
         }
 
-        dump($unks);
         $unks = array_merge([], ...$unks);
         $unks = array_unique($unks);
+        dump('unknowns');
+        dump($unks);
         return [ 0 => count($unks) ];
     }
 
