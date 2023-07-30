@@ -9,6 +9,7 @@ use App\Utils\Connection;
 /** Helper class for finding coverage of tokens for a given text string. */
 class TokenCoverage {
 
+    /*
     private function getUnknowns($text, $term_repo) {
         $paras = \App\Domain\RenderableSentence::getParagraphs($text, $term_repo);
         $ss = array_merge([], ...$paras);
@@ -35,6 +36,7 @@ class TokenCoverage {
 
         return [ 0 => $unknowns ];
     }
+    */
 
     private function getUniqueUnknowns($renderable) {
         $isUnknown = function($ti) { return $ti->IsWord == 1 && $ti->WoStatus == null; };
