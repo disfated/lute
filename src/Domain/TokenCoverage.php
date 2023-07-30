@@ -68,6 +68,7 @@ class TokenCoverage {
         $curr_subject = $fulltext;
         $curr_LCsubject = $LCsubject;
 
+        dump('in addCoverage');
         dump('term = ' . $termTextLC . ', sentence = ' . $LCsubject);
         dump('pregmatch ....');
         $mc = $this->pregMatchCapture('/' . $find_patt . '/', $LCsubject);
@@ -123,7 +124,7 @@ class TokenCoverage {
     private function getParts($text) {
         $zws = mb_chr(0x200B);
         $parts = explode($zws, $text);
-        $parts = array_filter($parts, fn($s) => $s != '');
+        // $parts = array_filter($parts, fn($s) => $s != '');
         return array_values($parts);
     }
 
@@ -150,6 +151,19 @@ class TokenCoverage {
         $LC_fulltext = mb_strtolower($fulltext);
         $parts = $this->getParts($LC_fulltext);
         // dump($parts);
+
+        dump('parts:');
+        dump($parts);
+        $map_word_start_to_tok_number = [];
+        $currpos = 0;
+        $currtok = 0;
+        foreach ($parts as $p) {
+            $map_word_start_to_tok_number[$currpos] = $currtok;
+            $currtok += 1;
+            $currpos += mb_strlen($p);
+        }
+        dump('start to tok:');
+        dump($map_word_start_to_tok_number);
 
         $res = $this->getTermData($book);
         while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
