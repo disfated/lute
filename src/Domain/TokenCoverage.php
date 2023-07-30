@@ -155,13 +155,21 @@ class TokenCoverage {
             $termTokenCount = intval($row['WoTokenCount']);
             $termStatus = intval($row['WoStatus']);
 
-            $mc = $this->pregMatchCapture('/' . $zws . $termTextLC . $zws . '/', $LC_fulltext);
-            // dump($mc);
-            foreach ($mc as $pos) {
-                $toknum = $map_word_start_to_tok_number[$pos];
-                for ($i = 0; $i < $termTokenCount; $i++)
-                    $parts[$toknum + $i] = $termStatus;
+            $pattern = '/' . $zws . $termTextLC . $zws . '/';
+            $matchInfo = array();
+            $pmaResult = preg_match_all($pattern, $LC_fulltext, $matchInfo, PREG_OFFSET_CAPTURE, 0);
+            if ($pmaResult !== 0 && !empty($matchInfo)) {
+                foreach ($matchInfo as $matches) {
+                    foreach ($matches as $match) {
+                        $matchedLength = $match[1];
+                        $pos = mb_strlen(mb_strcut($LC_fulltext, 0, $matchedLength));
+                        $toknum = $map_word_start_to_tok_number[$pos];
+                        for ($i = 0; $i < $termTokenCount; $i++)
+                            $parts[$toknum + $i] = $termStatus;
+                    }
+                }
             }
+
         }
 
         // dump($parts);
