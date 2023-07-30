@@ -38,6 +38,39 @@ class TokenCoverage {
     }
     */
 
+    private function getFullText(Book $book) {
+        $conn = Connection::getFromEnvironment();
+        $bkid = $book->getId();
+        $sql = "select GROUP_CONCAT(TxText, char(10))
+          from (
+            select TxText from
+            texts
+            inner join books on BkID = TxBkID
+            where BkID = {$bkid}
+            order by TxID
+          ) src";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $record = $stmt->fetch(\PDO::FETCH_NUM);
+        return $record[0];
+    }
+
+    private function getParsedTokens($book) {
+        $ft = $this->getFullText($book);
+        return $book->getLanguage()->getParsedTokens($ft);
+    }
+
+    private function getFullTextChunks($parsedtokens) {
+        $zws = mb_chr(0x200B); // zero-width space.
+        $sgi = new SentenceGroupIterator($parsedtokens, 2000);
+        $ret = [];
+        while ($i = $sgi->next()) {
+            $is = array_map(fn($t) => $t->token, $i);
+            $ret[] = $zws . implode($zws, $is) . $zws;
+        }
+        return $ret;
+    }
+
     private function getUniqueUnknowns($renderable) {
         $isUnknown = function($ti) { return $ti->IsWord == 1 && $ti->WoStatus == null; };
         $renderedUnks = array_filter($renderable, $isUnknown);
@@ -46,11 +79,10 @@ class TokenCoverage {
     }
     
     public function getStats(Book $book, TermRepository $term_repo) {
-        $ft = $this->getFullText($book);
         $pt = $this->getParsedTokens($book);
-        $sentence_groups = $this->getSentenceGroups($pt);
-        foreach ($sentence_groups as $sg) {
-            $parttext = $zws . implode($zws, $sg) . $zws;
+        $ftchunks = $this->getFullTextChunks($pt);
+        $zws = mb_chr(0x200B); // zero-width space.
+        foreach ($ftchunks as $parttext) {
             $renderable = $this->getRenderable($parttext, $term_repo);
             return [ 0 => $this->getUniqueUnknowns($renderable) ];
         }
