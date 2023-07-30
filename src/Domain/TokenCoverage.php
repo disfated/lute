@@ -107,9 +107,9 @@ class TokenCoverage {
     public function getStats(Book $book) {
         $fulltext = $this->getFullText($book);
         $fulltext = str_replace('¶', "\n", $fulltext);
-        dump('-----');
-        dump($fulltext);
-        dump('-----');
+        // dump('-----');
+        // dump($fulltext);
+        // dump('-----');
         $zws = mb_chr(0x200B);
 
         // Replace all zws with '' before reparsing: When sentences
@@ -143,8 +143,8 @@ class TokenCoverage {
             // search pattern.
             $currpos += (mb_strlen($p) + 1);
         }
-        dump('start to tok:');
-        dump($map_word_start_to_tok_number);
+        dump('built start to tok map');
+        // dump($map_word_start_to_tok_number);
 
         $res = $this->getTermData($book);
         $allTerms = $res->fetchAll(\PDO::FETCH_ASSOC);
@@ -166,18 +166,18 @@ class TokenCoverage {
             $pmaResult = preg_match_all($pattern, $LC_fulltext, $matchInfo, PREG_OFFSET_CAPTURE, 0);
             $checkMatches = ($pmaResult !== 0 && !empty($matchInfo));
             if ($checkMatches) {
-                dump("Match info for $pattern :");
-                dump($matchInfo);
-                dump("end match info");
+                // dump("Match info for $pattern :");
+                // dump($matchInfo);
+                // dump("end match info");
 
                 $matches = $matchInfo[0];
                 foreach ($matches as $match) {
-                    dump("--- checking match:");
-                    dump($match);
-                    dump("--- end match");
+                    // dump("--- checking match:");
+                    // dump($match);
+                    // dump("--- end match");
                     $matchedLength = $match[1];
                     $pos = mb_strlen(mb_strcut($LC_fulltext, 0, $matchedLength));
-                    dump("got pos = $pos");
+                    // dump("got pos = $pos");
                     $toknum = $map_word_start_to_tok_number[$pos];
                     for ($i = 0; $i < $termTokenCount; $i++)
                         $parts[$toknum + $i] = $termStatus;
