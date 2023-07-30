@@ -113,12 +113,8 @@ class TokenCoverage {
         while ($tokens = $sgi->next()) {
             $counter += 1;
             dump('stats for group ' . $counter . ' of ' . $maxcount);
-            $zws = mb_chr(0x200B); // zero-width space.
-            $is = array_map(fn($t) => $t->token, $tokens);
-            $s = $zws . implode($zws, $is) . $zws;
-            $s = mb_strtolower($s);
             dump('find terms');
-            $terms = $term_repo->findTermsInZwsJoinedString($s, $book->getLanguage());
+            $terms = $term_repo->findTermsInParsedTokens($tokens, $book->getLanguage());
             dump('done find terms');
 
             $tts = $this->createTextTokens($tokens);

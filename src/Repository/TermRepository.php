@@ -191,13 +191,33 @@ class TermRepository extends ServiceEntityRepository
     }
 
 
-    public function findTermsInZwsJoinedString(string $s, Language $lang) {
+    public function findTermsInParsedTokens($tokens, Language $lang) {
+        $lgid = $lang->getLgID();
         $wids = [];
         $conn = $this->getEntityManager()->getConnection();
 
-        $lgid = $lang->getLgID();
+        // Querying all words that match the text is very slow, so
+        // breaking it up into two parts.
+
+        // 1. Get all exact matches from the tokens.
+        $tokstrings = array_map(fn($t) => mb_strtolower($t->token), $tokens);
+        $tokstrings = array_unique($tokstrings);
+        $sql = "select distinct WoID from words
+            where wotextlc in (?)
+            and WoTokenCount = 1 and WoLgID = $lgid";
+        $res = $conn->executeQuery($sql, array($tokstrings), array(\Doctrine\DBAL\Connection::PARAM_STR_ARRAY));
+        while ($row = $res->fetchNumeric()) {
+            $wids[] = $row[0];
+        }
+
+        // 2. Get multiword matches.
+        $zws = mb_chr(0x200B); // zero-width space.
+        $is = array_map(fn($t) => $t->token, $tokens);
+        $s = $zws . implode($zws, $is) . $zws;
+        $s = mb_strtolower($s);
         $sql = "select WoID from words
             where WoLgID = $lgid AND
+            WoTokenCount > 1 AND
             instr(:contentLC, char(0x200B) || WoTextLC || char(0x200B)) > 0";
         $stmt = $conn->prepare($sql);
         $stmt->bindValue("contentLC", $s);
