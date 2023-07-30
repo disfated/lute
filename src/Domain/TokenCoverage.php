@@ -25,6 +25,33 @@ class TokenCoverage {
         return $n;
     }
 
+    /**
+     * Returns array of matches in same format as preg_match or
+     * Ref https://stackoverflow.com/questions/1725227/preg-match-and-utf-8-in-php
+     */
+    private function pregMatchCapture($pattern, $subject)
+    {
+        $offset = 0;
+
+        $matchInfo = array();
+        $flag      = PREG_OFFSET_CAPTURE;
+
+        // var_dump([$method, $pattern, $subject, $matchInfo, $flag, $offset]);
+        $n = preg_match_all($pattern, $subject, $matchInfo, $flag, $offset);
+
+        $positions = [];
+        if ($n !== 0 && !empty($matchInfo)) {
+            foreach ($matchInfo as $matches) {
+                foreach ($matches as $match) {
+                    $matchedLength = $match[1];
+                    // dump($subject);
+                    $positions[] = mb_strlen(mb_strcut($subject, 0, $matchedLength));
+                }
+            }
+        }
+        return $positions;
+    }
+
     // Using raw data instead of Term entity, thinking that it will be
     // less memory-intensive.
     private function addCoverage($fulltext, $LC_fulltext, &$parts, $termTextLC, $termTokenCount, $termStatus) {
@@ -40,6 +67,11 @@ class TokenCoverage {
         $curr_index = 0;
         $curr_subject = $fulltext;
         $curr_LCsubject = $LCsubject;
+
+        dump('term = ' . $termTextLC . ', sentence = ' . $LCsubject);
+        dump('pregmatch ....');
+        $mc = $this->pregMatchCapture('/' . $find_patt . '/', $LCsubject);
+        dump($mc);
 
         $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
 
