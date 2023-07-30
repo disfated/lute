@@ -142,7 +142,7 @@ group by txbkid";
         */
 
         /* */
-          // times out, hardly gets anywhere
+          // 3rd time lucky ????
         $tc = new TokenCoverage();
         $covstats = $tc->getStats($b);
         $unknowns = $covstats[0];

@@ -63,7 +63,6 @@ class TokenCoverage {
             inner join books on BkID = TxBkID
             where BkID = {$bkid}
             order by SeID
-            limit 100
           ) src";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
