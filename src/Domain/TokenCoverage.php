@@ -91,12 +91,7 @@ class TokenCoverage {
     }
     
     private function getTermsInString($zws_separated_string, $term_repo) {
-        dump('todo');
-        return [];
-    }
-
-    private function getRenderable($tokens, $terms) {
-        dump('todo');
+        dump('todo terms');
         return [];
     }
 
@@ -105,6 +100,7 @@ class TokenCoverage {
         $renderedUnks = array_filter($renderable, $isUnknown);
         $renderedUnks = array_map(fn($ti) => $ti->TextLC, $renderedUnks);
         $renderedUnks = array_unique($renderedUnks);
+        return $renderedUnks;
     }
     
     public function getStats(Book $book, TermRepository $term_repo) {
@@ -120,15 +116,18 @@ class TokenCoverage {
 
             $tts = $this->createTextTokens($tokens);
             $renderable = RenderableCalculator::getRenderable($terms, $tts);
+            // dump($renderable);
             $textitems = array_map(
                 fn($i) => $i->makeTextItem(1, 1, 1, $book->getLanguage()->getLgID()),
                 $renderable
             );
 
+            dump('text times:');
             dump($textitems);
             $unks[] = $this->getUniqueUnknowns($textitems);
         }
 
+        dump($unks);
         $unks = array_merge([], ...$unks);
         $unks = array_unique($unks);
         return [ 0 => count($unks) ];
