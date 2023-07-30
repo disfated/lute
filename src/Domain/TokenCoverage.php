@@ -108,7 +108,11 @@ class TokenCoverage {
         $sgi = new SentenceGroupIterator($pt, 2000);
 
         $unks = [];
+        $counter = 0;
+        $maxcount = $sgi->count();
         while ($tokens = $sgi->next()) {
+            $counter += 1;
+            dump("stats for group $counter of $maxcount");
             $zws = mb_chr(0x200B); // zero-width space.
             $is = array_map(fn($t) => $t->token, $tokens);
             $s = $zws . implode($zws, $is) . $zws;
