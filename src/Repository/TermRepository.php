@@ -191,6 +191,37 @@ class TermRepository extends ServiceEntityRepository
     }
 
 
+    public function findTermsInZwsJoinedString(string $s, Language $lang) {
+        $wids = [];
+        $conn = $this->getEntityManager()->getConnection();
+
+        $lgid = $lang->getLgID();
+        $sql = "select WoID from words
+            where WoLgID = $lgid AND
+            instr(:contentLC, char(0x200B) || WoTextLC || char(0x200B)) > 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue("contentLC", $s);
+        $res = $stmt->executeQuery();
+        while ($row = $res->fetchNumeric()) {
+            $wids[] = $row[0];
+        }
+
+        $dql = "SELECT t, tt, ti, tp, tpt, tpi
+          FROM App\Entity\Term t
+          LEFT JOIN t.termTags tt
+          LEFT JOIN t.images ti
+          LEFT JOIN t.parents tp
+          LEFT JOIN tp.termTags tpt
+          LEFT JOIN tp.images tpi
+          WHERE t.id in (:tids)";
+        $query = $this->getEntityManager()
+               ->createQuery($dql)
+               ->setParameter('tids', $wids);
+        $terms = $query->getResult();
+        return $terms;
+    }
+
+
     /** Returns data for ajax paging. */
     public function getDataTablesList($parameters) {
 

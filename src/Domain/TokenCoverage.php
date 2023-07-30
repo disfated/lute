@@ -112,7 +112,8 @@ class TokenCoverage {
             $zws = mb_chr(0x200B); // zero-width space.
             $is = array_map(fn($t) => $t->token, $tokens);
             $s = $zws . implode($zws, $is) . $zws;
-            $terms = $this->getTermsInString($s, $term_repo);
+            $s = mb_strtolower($s);
+            $terms = $term_repo->findTermsInZwsJoinedString($s, $book->getLanguage());
 
             $tts = $this->createTextTokens($tokens);
             $renderable = RenderableCalculator::getRenderable($terms, $tts);
