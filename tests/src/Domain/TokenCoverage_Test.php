@@ -33,7 +33,7 @@ final class TokenCoverage_Test extends DatabaseTestBase
             $this->addTerm($ts[0], $ts[1]);
 
         $tc = new TokenCoverage();
-        $stats = $tc->getStats($b);
+        $stats = $tc->getStats($b, $this->term_repo);
         dump($stats);
     }
 

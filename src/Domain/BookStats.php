@@ -144,7 +144,7 @@ group by txbkid";
         /* */
           // 3rd time lucky ????
         $tc = new TokenCoverage();
-        $covstats = $tc->getStats($b);
+        $covstats = $tc->getStats($b, $term_repo);
         $unknowns = $covstats[0];
         /* */
 
