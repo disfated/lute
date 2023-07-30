@@ -143,34 +143,49 @@ class TokenCoverage {
             // search pattern.
             $currpos += (mb_strlen($p) + 1);
         }
-        // dump('start to tok:');
-        // dump($map_word_start_to_tok_number);
+        dump('start to tok:');
+        dump($map_word_start_to_tok_number);
 
         $res = $this->getTermData($book);
-        $n = 0;
-        while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
-            $termTextLC = $row['WoTextLC'];
-            $n += 1;
-            dump("checking term $n : $termTextLC");
-            $termTokenCount = intval($row['WoTokenCount']);
-            $termStatus = intval($row['WoStatus']);
+        $allTerms = $res->fetchAll(\PDO::FETCH_ASSOC);
 
-            $pattern = '/' . $zws . $termTextLC . $zws . '/';
+        $n = 0;
+        foreach (array_chunk($allTerms, 500) as $chunk) {
+            $termTextLCs = array_map(fn($row) => $row['WoTextLC'], $chunk);
+
+            $n += 1;
+            dump("checking chunk $n, starts with term : " . $termTextLCs[0]);
+
+            // TODO fix, should only take same token count and same status
+            $termTokenCount = intval($chunk[0]['WoTokenCount']);
+            $termStatus = intval($chunk[0]['WoStatus']);
+
+            $pattern = "(" . implode("|", $termTextLCs) . ")";
+            $pattern = '/' . $zws . $pattern . $zws . '/';
             $matchInfo = array();
             $pmaResult = preg_match_all($pattern, $LC_fulltext, $matchInfo, PREG_OFFSET_CAPTURE, 0);
-            if ($pmaResult !== 0 && !empty($matchInfo)) {
-                foreach ($matchInfo as $matches) {
-                    foreach ($matches as $match) {
-                        $matchedLength = $match[1];
-                        $pos = mb_strlen(mb_strcut($LC_fulltext, 0, $matchedLength));
-                        $toknum = $map_word_start_to_tok_number[$pos];
-                        for ($i = 0; $i < $termTokenCount; $i++)
-                            $parts[$toknum + $i] = $termStatus;
-                    }
-                }
-            }
+            $checkMatches = ($pmaResult !== 0 && !empty($matchInfo));
+            if ($checkMatches) {
+                dump("Match info for $pattern :");
+                dump($matchInfo);
+                dump("end match info");
 
-        }
+                $matches = $matchInfo[0];
+                foreach ($matches as $match) {
+                    dump("--- checking match:");
+                    dump($match);
+                    dump("--- end match");
+                    $matchedLength = $match[1];
+                    $pos = mb_strlen(mb_strcut($LC_fulltext, 0, $matchedLength));
+                    dump("got pos = $pos");
+                    $toknum = $map_word_start_to_tok_number[$pos];
+                    for ($i = 0; $i < $termTokenCount; $i++)
+                        $parts[$toknum + $i] = $termStatus;
+                }
+            } // end $checkMatches
+
+            dump("done chunk $n");
+        } // next chunk
 
         // dump($parts);
 
