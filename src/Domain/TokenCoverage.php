@@ -52,47 +52,6 @@ class TokenCoverage {
         return $positions;
     }
 
-    // Using raw data instead of Term entity, thinking that it will be
-    // less memory-intensive.
-    private function addCoverage($fulltext, $LC_fulltext, &$parts, $termTextLC, $termTokenCount, $termStatus) {
-        $zws = mb_chr(0x200B);
-        $len_zws = mb_strlen($zws);
-        $tlc = $termTextLC;
-        $find_patt = $zws . $tlc . $zws;
-        $wordlen = mb_strlen($tlc);
-
-        $LCsubject = $LC_fulltext;
-        $LCpatt = $find_patt;
-
-        $curr_index = 0;
-        $curr_subject = $fulltext;
-        $curr_LCsubject = $LCsubject;
-
-        dump('in addCoverage');
-        dump('term = ' . $termTextLC . ', sentence = ' . $LCsubject);
-        dump('pregmatch ....');
-        $mc = $this->pregMatchCapture('/' . $find_patt . '/', $LCsubject);
-        dump($mc);
-
-        $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
-
-        while ($pos !== false) {
-            $cb = $this->get_count_before($curr_subject, $pos, $zws);
-            $curr_index += $cb;
-
-            for ($i = 0; $i < $termTokenCount; $i++) {
-                $parts[$curr_index + $i] = $termStatus;  // matched
-            }
-            $curr_index += $termTokenCount;
-
-            $pos += $wordlen + 2 * $len_zws;
-            $curr_subject = mb_substr($curr_subject, $pos);
-            $curr_LCsubject = mb_substr($curr_LCsubject, $pos);
-            // echo "\nNext iteration with curr_LCsubject = {$curr_LCsubject}\n";
-            $pos = mb_strpos($curr_LCsubject, $LCpatt, 0);
-        }
-    }
-
     private function getFullText(Book $book) {
         $conn = Connection::getFromEnvironment();
         $bkid = $book->getId();
@@ -124,7 +83,7 @@ class TokenCoverage {
     private function getParts($text) {
         $zws = mb_chr(0x200B);
         $parts = explode($zws, $text);
-        // $parts = array_filter($parts, fn($s) => $s != '');
+        $parts = array_filter($parts, fn($s) => $s != '');
         return array_values($parts);
     }
 
@@ -148,33 +107,62 @@ class TokenCoverage {
 
     public function getStats(Book $book) {
         $fulltext = $this->getFullText($book);
-        $LC_fulltext = mb_strtolower($fulltext);
-        $parts = $this->getParts($LC_fulltext);
+        $zws = mb_chr(0x200B);
+
+        // Replace all zws with '' before reparsing: When sentences
+        // are stored, extra zws are added at the start and end to
+        // facilitate word search matching, since the zws is used as a
+        // word boundary.  Removing all of the zws in the text returns
+        // it to its "original" state, more or less, so it can be
+        // reparsed to get a cleaner set of tokens.
+        $fulltext = str_replace($zws, '', $fulltext);
+        $parts = $book->getLanguage()->getParsedTokens($fulltext);
+        $parts = array_map(fn($p) => $p->token, $parts);
+        // Re-add the zws at the start and end to facilitate word
+        // search matching.
+        $LC_fulltext = $zws . mb_strtolower(implode($zws, $parts)) . $zws;
+
+        // dump('parts:');
         // dump($parts);
 
-        dump('parts:');
-        dump($parts);
+        // When searching for terms in the text, we need to mark the
+        // corresponding token as found or not.  This next section
+        // creates a map of the returned search positions to the
+        // underlying token number.
         $map_word_start_to_tok_number = [];
         $currpos = 0;
         $currtok = 0;
         foreach ($parts as $p) {
+            // dump('mapping ' . $currpos . ' to ' . $currtok);
             $map_word_start_to_tok_number[$currpos] = $currtok;
             $currtok += 1;
-            $currpos += mb_strlen($p);
+            // Adding 1 to account for the zws at the start of the
+            // search pattern.
+            $currpos += (mb_strlen($p) + 1);
         }
-        dump('start to tok:');
-        dump($map_word_start_to_tok_number);
+        // dump('start to tok:');
+        // dump($map_word_start_to_tok_number);
 
         $res = $this->getTermData($book);
+        $n = 0;
         while($row = $res->fetch(\PDO::FETCH_ASSOC)) {
             $termTextLC = $row['WoTextLC'];
-            dump('checking term ' . $termTextLC);
+            $n += 1;
+            dump("checking term $n : $termTextLC");
             $termTokenCount = intval($row['WoTokenCount']);
             $termStatus = intval($row['WoStatus']);
-            $this->addCoverage($fulltext, $LC_fulltext, $parts, $termTextLC, $termTokenCount, $termStatus);
+
+            $mc = $this->pregMatchCapture('/' . $zws . $termTextLC . $zws . '/', $LC_fulltext);
+            // dump($mc);
+            foreach ($mc as $pos) {
+                $toknum = $map_word_start_to_tok_number[$pos];
+                for ($i = 0; $i < $termTokenCount; $i++)
+                    $parts[$toknum + $i] = $termStatus;
+            }
         }
 
         // dump($parts);
+
         $all_statuses = array_filter($parts, fn($e) => ! is_string($e));
         $scount = array_count_values($all_statuses);
         // dump($scount);
