@@ -42,12 +42,12 @@ final class TokenCoverage_Test extends DatabaseTestBase
                         [[ "gato", 1 ]]);
     }
 
-    public function DIS_test_two_words() {
+    public function test_two_words() {
         $this->scenario("Tengo un gato.  Tengo un perro.",
                         [[ "gato", 1 ], [ "perro", 2 ]]);
     }
 
-    public function DIS_test_with_multiword() {
+    public function test_with_multiword() {
         $this->scenario("Tengo un gato.  Tengo un perro.",
                         [[ "tengo un", 1 ]]);
     }
