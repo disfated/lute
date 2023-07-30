@@ -106,6 +106,10 @@ class TokenCoverage {
 
     public function getStats(Book $book) {
         $fulltext = $this->getFullText($book);
+        $fulltext = str_replace('¶', "\n", $fulltext);
+        dump('-----');
+        dump($fulltext);
+        dump('-----');
         $zws = mb_chr(0x200B);
 
         // Replace all zws with '' before reparsing: When sentences
@@ -172,6 +176,7 @@ class TokenCoverage {
         // why this was happening, can't be bothered to investigate
         // further.
         $remaining = implode(' ', $remaining);
+        dump($remaining);
         $ptokens = $book->getLanguage()->getParsedTokens($remaining);
         $ptwords = array_filter($ptokens, fn($p) => $p->isWord);
         $ptwords = array_map(fn($p) => $p->token, $ptwords);
