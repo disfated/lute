@@ -5,6 +5,7 @@ namespace App\Domain;
 use App\Entity\Book;
 use App\Repository\TermRepository;
 use App\Utils\Connection;
+use App\DTO\TextToken;
 
 /** Helper class for finding coverage of tokens for a given text string. */
 class TokenCoverage {
@@ -71,6 +72,34 @@ class TokenCoverage {
         return $ret;
     }
 
+    private function createTextTokens($parsedTokens) {
+        $ret = [];
+        $i = 0;
+        foreach ($parsedTokens as $pt) {
+            $tok = new TextToken();
+            $tok->TokSentenceNumber = 1;
+            $tok->TokParagraphNumber = 1;
+            $tok->TokOrder = $i;
+            $i += 1;
+            $tok->TokIsWord = $pt->isWord;
+            $tok->TokText = $pt->token;
+            $tok->TokTextLC = mb_strtolower($pt->token);
+            $ret[] = $tok;
+        }
+        return $ret;
+
+    }
+    
+    private function getTermsInString($zws_separated_string, $term_repo) {
+        dump('todo');
+        return [];
+    }
+
+    private function getRenderable($tokens, $terms) {
+        dump('todo');
+        return [];
+    }
+
     private function getUniqueUnknowns($renderable) {
         $isUnknown = function($ti) { return $ti->IsWord == 1 && $ti->WoStatus == null; };
         $renderedUnks = array_filter($renderable, $isUnknown);
@@ -80,12 +109,29 @@ class TokenCoverage {
     
     public function getStats(Book $book, TermRepository $term_repo) {
         $pt = $this->getParsedTokens($book);
-        $ftchunks = $this->getFullTextChunks($pt);
-        $zws = mb_chr(0x200B); // zero-width space.
-        foreach ($ftchunks as $parttext) {
-            $renderable = $this->getRenderable($parttext, $term_repo);
-            return [ 0 => $this->getUniqueUnknowns($renderable) ];
+        $sgi = new SentenceGroupIterator($pt, 2000);
+
+        $unks = [];
+        while ($tokens = $sgi->next()) {
+            $zws = mb_chr(0x200B); // zero-width space.
+            $is = array_map(fn($t) => $t->token, $tokens);
+            $s = $zws . implode($zws, $is) . $zws;
+            $terms = $this->getTermsInString($s, $term_repo);
+
+            $tts = $this->createTextTokens($tokens);
+            $renderable = RenderableCalculator::getRenderable($terms, $tts);
+            $textitems = array_map(
+                fn($i) => $i->makeTextItem(1, 1, 1, $book->getLanguage()->getLgID()),
+                $renderable
+            );
+
+            dump($textitems);
+            $unks[] = $this->getUniqueUnknowns($textitems);
         }
+
+        $unks = array_merge([], ...$unks);
+        $unks = array_unique($unks);
+        return [ 0 => count($unks) ];
     }
 
 }
