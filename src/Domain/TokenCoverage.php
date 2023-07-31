@@ -112,6 +112,7 @@ class TokenCoverage {
         $maxcount = $sgi->count();
         while ($tokens = $sgi->next()) {
             $counter += 1;
+            dump('-----');
             dump('stats for group ' . $counter . ' of ' . $maxcount);
             dump('find terms');
             $terms = $term_repo->findTermsInParsedTokens($tokens, $book->getLanguage());
@@ -136,8 +137,8 @@ class TokenCoverage {
 
         $unks = array_merge([], ...$unks);
         $unks = array_unique($unks);
-        dump('unknowns');
-        dump($unks);
+        dump('count of unknowns');
+        dump(count($unks));
         return [ 0 => count($unks) ];
     }
 

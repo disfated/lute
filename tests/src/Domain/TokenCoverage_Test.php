@@ -42,7 +42,7 @@ final class TokenCoverage_Test extends DatabaseTestBase
                         [[ "gato", 1 ], [ "perro", 2 ]]);
     }
 
-    /*
+    /* */
     public function test_single_word() {
         $this->scenario("Tengo un gato.  Tengo un perro.",
                         [[ "gato", 1 ]]);
