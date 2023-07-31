@@ -294,7 +294,9 @@ class RenderableCalculator {
     }
 
     public function main($words, $texttokens) {
+        dump('  RC get renderable');
         $renderable = $this->get_renderable($words, $texttokens);
+        dump('  RC done get');
         /*
         dump('  RC get_all_RenderableCandidates');
         $candidates = $this->get_all_RenderableCandidates($words, $texttokens);
