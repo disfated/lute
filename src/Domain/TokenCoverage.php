@@ -90,11 +90,6 @@ class TokenCoverage {
 
     }
     
-    private function getTermsInString($zws_separated_string, $term_repo) {
-        dump('todo terms');
-        return [];
-    }
-
     private function getUniqueUnknowns($renderable) {
         $isUnknown = function($ti) { return $ti->IsWord == 1 && $ti->WoStatus == null; };
         $renderedUnks = array_filter($renderable, $isUnknown);
@@ -104,41 +99,45 @@ class TokenCoverage {
     }
     
     public function getStats(Book $book, TermRepository $term_repo) {
+        $term_repo->stopSqlLog();
+
         $pt = $this->getParsedTokens($book);
-        $sgi = new SentenceGroupIterator($pt, 2000);
+        $sgi = new SentenceGroupIterator($pt, 500);
 
         $unks = [];
         $counter = 0;
         $maxcount = $sgi->count();
         while ($tokens = $sgi->next()) {
             $counter += 1;
-            dump('-----');
-            dump('stats for group ' . $counter . ' of ' . $maxcount);
-            dump('find terms');
+            // dump('-----');
+            // dump('stats for group ' . $counter . ' of ' . $maxcount);
+            // dump('find terms');
             $terms = $term_repo->findTermsInParsedTokens($tokens, $book->getLanguage());
-            dump('done find terms');
+            // dump('done find terms');
 
-            dump('create tokens');
+            // dump('create tokens');
             $tts = $this->createTextTokens($tokens);
-            dump('get renderable');
+            // dump('get renderable');
             $renderable = RenderableCalculator::getRenderable($terms, $tts);
-            dump('done renderable');
+            // dump('done renderable');
             // dump($renderable);
-            dump('make text items');
+            // dump('make text items');
             $textitems = array_map(
                 fn($i) => $i->makeTextItem(1, 1, 1, $book->getLanguage()->getLgID()),
                 $renderable
             );
-            dump('done make text items');
+            // dump('done make text items');
             // dump('text times:');
             // dump($textitems);
             $unks[] = $this->getUniqueUnknowns($textitems);
+
+            $term_repo->clear();
         }
 
         $unks = array_merge([], ...$unks);
         $unks = array_unique($unks);
-        dump('count of unknowns');
-        dump(count($unks));
+        // dump('count of unknowns');
+        // dump(count($unks));
         return [ 0 => count($unks) ];
     }
 
