@@ -145,6 +145,7 @@ class RenderableCalculator {
             return ($a->pos < $b->pos) ? -1 : 1;
         };
         usort($termcandidates, $cmp);
+        dump($termcandidates);
 
         // The $termcandidates should now be sorted such that longest
         // are first, with items of equal length being sorted by
@@ -152,8 +153,8 @@ class RenderableCalculator {
         // their IDs to the "rendered" array, we should end up with
         // the final IDs in each position.
         foreach (array_reverse($termcandidates) as $tc) {
-            for ($i = 0; $i < $rc->length; $i++)
-                $rendered[$rc->pos + $i] = $rc->id;
+            for ($i = 0; $i < $tc->length; $i++)
+                $rendered[$tc->pos + $i] = $tc->id;
         }
 
         dump('final rendered = ');

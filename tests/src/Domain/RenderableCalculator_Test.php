@@ -44,7 +44,7 @@ class RenderableCalculator_Test extends TestCase
 
         $zws = mb_chr(0x200B);
         $res = str_replace($zws, '', $res);
-        $this->assertEquals($res, $expected);
+        $this->assertEquals($res, $expected, 'rendered');
 
         if ($expecteddisplayed != null) {
             $res = '';
@@ -56,7 +56,7 @@ class RenderableCalculator_Test extends TestCase
 
             $zws = mb_chr(0x200B);
             $res = str_replace($zws, '', $res);
-            $this->assertEquals($res, $expecteddisplayed);
+            $this->assertEquals($res, $expecteddisplayed, 'displayed text');
         }
     }
 
@@ -146,20 +146,22 @@ class RenderableCalculator_Test extends TestCase
         $this->assertRenderableEquals($data, $words, $expected, $expecteddisplayed);
     }
 
+    /**
+     * @group rccurr
+     */
     public function test_multiwords_starting_at_same_location()
     {
-        $data = [
-            [ 1, 'A' ],
-            [ 2, 'B' ],
-            [ 3, 'C' ],
-            [ 4, 'D' ]
-        ];
+        $chars = str_split('A B C D');
+        $data = [];
+        foreach ($chars as $c) {
+            $data[] = [count($data) + 1, $c];
+        };
         $words = [
             [ 'A B' ],
             [ 'A B C' ]
         ];
 
-        $expected = "[A B C-3][D-1]";
+        $expected = "[A B C-5][ -1][D-1]";
         $this->assertRenderableEquals($data, $words, $expected);
     }
 
