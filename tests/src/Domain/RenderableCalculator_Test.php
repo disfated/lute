@@ -23,7 +23,7 @@ class RenderableCalculator_Test extends TestCase
         return array_map(fn($t) => $makeToken($t), $token_data);
     }
 
-    private function assertRenderableEquals($token_data, $word_data, $expected) {
+    private function assertRenderableEquals($token_data, $word_data, $expected, $expecteddisplayed = null) {
         $tokens = $this->makeTokens($token_data);
 
         $makeTerm = function($arr) {
@@ -45,6 +45,19 @@ class RenderableCalculator_Test extends TestCase
         $zws = mb_chr(0x200B);
         $res = str_replace($zws, '', $res);
         $this->assertEquals($res, $expected);
+
+        if ($expecteddisplayed != null) {
+            $res = '';
+            foreach ($rcs as $rc) {
+                if ($rc->render) {
+                    $res .= "[{$rc->displaytext}-{$rc->length}]";
+                }
+            }
+
+            $zws = mb_chr(0x200B);
+            $res = str_replace($zws, '', $res);
+            $this->assertEquals($res, $expecteddisplayed);
+        }
     }
 
 
@@ -113,6 +126,26 @@ class RenderableCalculator_Test extends TestCase
         $this->assertRenderableEquals($data, $words, $expected);
     }
 
+    public function test_overlapping_multiwords()
+    {
+        $data = [
+            [ 1, 'some' ],
+            [ 2, ' ' ],
+            [ 3, 'data' ],
+            [ 4, ' ' ],
+            [ 5, 'here' ],
+            [ 6, '.' ]
+        ];
+        $words = [
+            [ 'some data' ],
+            [ 'data here' ]
+        ];
+
+        $expected = "[some data-3][data here-3][.-1]";
+        $expecteddisplayed = "[some data-3][ here-3][.-1]";
+        $this->assertRenderableEquals($data, $words, $expected, $expecteddisplayed);
+    }
+
 
     /* Test case directly from the class documentation. */
     public function test_crazy_case()
@@ -128,8 +161,9 @@ class RenderableCalculator_Test extends TestCase
             [ 'F G' ],  // L
             [ 'C D E' ] // M
         ];
-        $expected = '[A-1][ -1][B C-3][C D E-5][E F G H I-9]';
-        $this->assertRenderableEquals($data, $words, $expected);
+        $expected =          '[A-1][ -1][B C-3][C D E-5][E F G H I-9]';
+        $expecteddisplayed = '[A-1][ -1][B C-3][ D E-5][ F G H I-9]';
+        $this->assertRenderableEquals($data, $words, $expected, $expecteddisplayed);
     }
 
 }

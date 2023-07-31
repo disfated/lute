@@ -86,7 +86,8 @@ class RenderableCalculator {
             }
         }
         
-        // Add originals
+        // Add the original tokens (that is, tokens in the text that
+        // aren't Terms).
         foreach ($texttokens as $tok) {
             $result = new RenderableCandidate();
             $result->term = null;
@@ -102,6 +103,8 @@ class RenderableCalculator {
 
 
     private function calculate_hides(&$items) {
+        // Only have to look at terms, because they're the only ones
+        // that can hide other things.
         $isTerm = function($i) { return $i->term != null; };
         $checkwords = array_filter($items, $isTerm);
         // echo "checking words ----------\n";
