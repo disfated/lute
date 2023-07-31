@@ -49,6 +49,127 @@ class RenderableCalculator {
         }
     }
 
+    /**
+     * Method to determine what should be rendered:
+     *
+     * 1. Create a "rendered array".  On completion of this algorithm,
+     * each position in the array will be filled with the ID of the
+     * RenderableCandidate that should actually appear there (and
+     * which might hide other candidates).
+     *     
+     * 2. Start by saying that all the original texttokens will be
+     * rendered by writing each candidate ID in the rendered array.
+     *
+     * 3. Create candidates for all the terms.
+     * 
+     * 4. Starting with the shortest terms first (fewest text tokens),
+     * and starting _at the end_ of the string, "write" the candidate
+     * ID to the output "rendered array", for each token in the candidate.
+     *
+     * At the end of this process, each position in the "rendered array"
+     * should be filled with the ID of the corresponding candidate
+     * that will actually appear in that position.  By getting the
+     * unique IDs and returning just their candidates, we should have
+     * the list of candidates that would be "visible" on render.
+    */
+    private function get_renderable($terms, $texttokens) {
+
+        // Pre-condition: contiguous ordered texttokens.
+        $cmp = function($a, $b) {
+            if ($a->TokOrder != $b->TokOrder) {
+                return ($a->TokOrder > $b->TokOrder) ? 1 : -1;
+            }
+        };
+        usort($texttokens, $cmp);
+        $this->assert_texttokens_are_contiguous($texttokens);
+
+        $candidateID = 0;
+        $candidates = [];
+
+        // Step 1.
+        $rendered = [];
+
+        // Step 2 - fill with the original texttokens.
+        foreach ($texttokens as $tok) {
+            $rc = new RenderableCandidate();
+            $candidateID += 1;
+            $rc->id = $candidateID;
+
+            $rc->term = null;
+            $rc->displaytext = $tok->TokText;
+            $rc->text = $tok->TokText;
+            $rc->pos = $tok->TokOrder;
+            $rc->length = 1;  // Each thing parsed is 1 token!
+            $rc->isword = $tok->TokIsWord;
+
+            $candidates[$candidateID] = $rc;
+            $rendered[$rc->pos] = $candidateID;
+        }
+
+        // 3.  Create candidates for all the terms.
+        $termcandidates = [];
+        $firstTokOrder = $texttokens[0]->TokOrder;
+        $toktext = array_map(fn($t) => $t->TokText, $texttokens);
+        $subject = TokenLocator::make_string($toktext);
+        foreach ($terms as $term) {
+            $tlc = $term->getTextLC();
+            $wtokencount = $term->getTokenCount();
+            $find_patt = TokenLocator::make_string($tlc);
+            $locations = TokenLocator::locate($subject, $find_patt);
+
+            foreach ($locations as $loc) {
+                $rc = new RenderableCandidate();
+                $candidateID += 1;
+                $rc->id = $candidateID;
+
+                $matchtext = $loc[0];
+                $index = $loc[1];
+                $rc->term = $term;
+                $rc->displaytext = $matchtext;
+                $rc->text = $matchtext;
+                $rc->pos = $firstTokOrder + $index;
+                $rc->length = $wtokencount;
+                $rc->isword = 1;
+
+                $termcandidates[] = $rc;
+                $candidates[$candidateID] = $rc;
+            }
+        }
+
+        // 4a.  Sort the term candidates: first by length, then by position.
+        $cmp = function($a, $b) {
+            // Longest sorts first.
+            if ($a->length != $b->length)
+                return ($a->length > $b->length) ? -1 : 1;
+            // Lowest position (closest to front of string) sorts first.
+            return ($a->pos < $b->pos) ? -1 : 1;
+        };
+        usort($termcandidates, $cmp);
+
+        // The $termcandidates should now be sorted such that longest
+        // are first, with items of equal length being sorted by
+        // position.  By traversing this in reverse and "writing"
+        // their IDs to the "rendered" array, we should end up with
+        // the final IDs in each position.
+        foreach (array_reverse($termcandidates) as $tc) {
+            for ($i = 0; $i < $rc->length; $i++)
+                $rendered[$rc->pos + $i] = $rc->id;
+        }
+
+        dump('final rendered = ');
+        dump($rendered);
+
+        $rcids = array_unique(array_values($rendered));
+        dump('rendered candidate ids = ' . implode(', ', $rcids));
+
+        $ret = [];
+        foreach ($rcids as $rcid) {
+            $ret[] = $candidates[$rcid];
+        }
+
+        return $ret;
+    }
+    
     private function get_all_RenderableCandidates($words, $texttokens) {
 
         // Tokens must be contiguous and in order!
@@ -172,12 +293,15 @@ class RenderableCalculator {
     }
 
     public function main($words, $texttokens) {
+        $renderable = $this->get_renderable($words, $texttokens);
+        /*
         dump('  RC get_all_RenderableCandidates');
         $candidates = $this->get_all_RenderableCandidates($words, $texttokens);
         dump('  RC calc hides');
         $candidates = $this->calculate_hides($candidates);
         dump('  RC etc');
         $renderable = array_filter($candidates, fn($i) => $i->render);
+        */
         $items = $this->sort_by_order_and_tokencount($renderable);
         $items = $this->calc_overlaps($items);
         dump('  RC returning');
