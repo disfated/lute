@@ -117,14 +117,18 @@ class TokenCoverage {
             $terms = $term_repo->findTermsInParsedTokens($tokens, $book->getLanguage());
             dump('done find terms');
 
+            dump('create tokens');
             $tts = $this->createTextTokens($tokens);
+            dump('get renderable');
             $renderable = RenderableCalculator::getRenderable($terms, $tts);
+            dump('done renderable');
             // dump($renderable);
+            dump('make text items');
             $textitems = array_map(
                 fn($i) => $i->makeTextItem(1, 1, 1, $book->getLanguage()->getLgID()),
                 $renderable
             );
-
+            dump('done make text items');
             // dump('text times:');
             // dump($textitems);
             $unks[] = $this->getUniqueUnknowns($textitems);

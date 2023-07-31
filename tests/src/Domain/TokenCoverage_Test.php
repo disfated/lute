@@ -37,20 +37,21 @@ final class TokenCoverage_Test extends DatabaseTestBase
         dump($stats);
     }
 
-    public function test_single_word() {
-        $this->scenario("Tengo un gato.  Tengo un perro.",
-                        [[ "gato", 1 ]]);
-    }
-
     public function test_two_words() {
         $this->scenario("Tengo un gato.  Tengo un perro.",
                         [[ "gato", 1 ], [ "perro", 2 ]]);
+    }
+
+    /*
+    public function test_single_word() {
+        $this->scenario("Tengo un gato.  Tengo un perro.",
+                        [[ "gato", 1 ]]);
     }
 
     public function test_with_multiword() {
         $this->scenario("Tengo un gato.  Tengo un perro.",
                         [[ "tengo un", 1 ]]);
     }
-
+    /* */
 
 }

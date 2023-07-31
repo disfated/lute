@@ -110,7 +110,10 @@ class RenderableCalculator {
         // echo "checking words ----------\n";
         // var_dump($checkwords);
         // echo "------\n";
+
+        dump("checking " . count($checkwords) . " terms for hides");
         foreach ($checkwords as &$mw) {
+            // dump($mw->text);
             $isContained = function($i) use ($mw) {
                 $contained = ($i->pos >= $mw->pos) && ($i->OrderEnd() <= $mw->OrderEnd());
                 $equivalent = ($i->pos == $mw->pos) && ($i->OrderEnd() == $mw->OrderEnd()) && ($i->getTermID() == $mw->getTermID());
@@ -169,11 +172,15 @@ class RenderableCalculator {
     }
 
     public function main($words, $texttokens) {
+        dump('  RC get_all_RenderableCandidates');
         $candidates = $this->get_all_RenderableCandidates($words, $texttokens);
+        dump('  RC calc hides');
         $candidates = $this->calculate_hides($candidates);
+        dump('  RC etc');
         $renderable = array_filter($candidates, fn($i) => $i->render);
         $items = $this->sort_by_order_and_tokencount($renderable);
         $items = $this->calc_overlaps($items);
+        dump('  RC returning');
         return $items;
     }
 
