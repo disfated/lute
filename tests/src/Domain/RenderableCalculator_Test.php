@@ -146,6 +146,23 @@ class RenderableCalculator_Test extends TestCase
         $this->assertRenderableEquals($data, $words, $expected, $expecteddisplayed);
     }
 
+    public function test_multiwords_starting_at_same_location()
+    {
+        $data = [
+            [ 1, 'A' ],
+            [ 2, 'B' ],
+            [ 3, 'C' ],
+            [ 4, 'D' ]
+        ];
+        $words = [
+            [ 'A B' ],
+            [ 'A B C' ]
+        ];
+
+        $expected = "[A B C-3][D-1]";
+        $this->assertRenderableEquals($data, $words, $expected);
+    }
+
 
     /* Test case directly from the class documentation. */
     public function test_crazy_case()
