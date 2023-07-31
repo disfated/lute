@@ -145,7 +145,7 @@ class RenderableCalculator {
             return ($a->pos < $b->pos) ? -1 : 1;
         };
         usort($termcandidates, $cmp);
-        dump($termcandidates);
+        // dump($termcandidates);
 
         // The $termcandidates should now be sorted such that longest
         // are first, with items of equal length being sorted by
@@ -157,11 +157,11 @@ class RenderableCalculator {
                 $rendered[$tc->pos + $i] = $tc->id;
         }
 
-        dump('final rendered = ');
-        dump($rendered);
+        // dump('final rendered = ');
+        // dump($rendered);
 
         $rcids = array_unique(array_values($rendered));
-        dump('rendered candidate ids = ' . implode(', ', $rcids));
+        // dump('rendered candidate ids = ' . implode(', ', $rcids));
 
         $ret = [];
         foreach ($rcids as $rcid) {
