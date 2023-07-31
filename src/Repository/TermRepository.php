@@ -186,6 +186,7 @@ class TermRepository extends ServiceEntityRepository
         $query = $this->getEntityManager()
                ->createQuery($dql)
                ->setParameter('tids', $wids);
+        $query->disableResultCache();
         $raw = $query->getResult();
         return $raw;
     }

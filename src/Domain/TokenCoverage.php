@@ -99,8 +99,6 @@ class TokenCoverage {
     }
     
     public function getStats(Book $book, TermRepository $term_repo) {
-        $term_repo->stopSqlLog();
-
         $pt = $this->getParsedTokens($book);
         $sgi = new SentenceGroupIterator($pt, 500);
 
@@ -108,29 +106,42 @@ class TokenCoverage {
         $counter = 0;
         $maxcount = $sgi->count();
         while ($tokens = $sgi->next()) {
+            $term_repo->stopSqlLog();
+
             $counter += 1;
             // dump('-----');
-            // dump('stats for group ' . $counter . ' of ' . $maxcount);
-            // dump('find terms');
+            $dump = [];
+            $dump[] = 'stats for group ' . $counter . ' of ' . $maxcount;
+            $time_start = microtime(true);
+            $time_now = microtime(true);
             $terms = $term_repo->findTermsInParsedTokens($tokens, $book->getLanguage());
-            // dump('done find terms');
+            $dump[] = 'find terms: ' . (microtime(true) - $time_now);
 
             // dump('create tokens');
             $tts = $this->createTextTokens($tokens);
-            // dump('get renderable');
+            $time_now = microtime(true);
             $renderable = RenderableCalculator::getRenderable($terms, $tts);
-            // dump('done renderable');
+            $dump[] = 'renderable calc: ' . (microtime(true) - $time_now);
+
             // dump($renderable);
             // dump('make text items');
+            $time_now = microtime(true);
             $textitems = array_map(
                 fn($i) => $i->makeTextItem(1, 1, 1, $book->getLanguage()->getLgID()),
                 $renderable
             );
+            $dump[] = 'make textitems: ' . (microtime(true) - $time_now);
+
             // dump('done make text items');
             // dump('text times:');
             // dump($textitems);
+            $time_now = microtime(true);
             $unks[] = $this->getUniqueUnknowns($textitems);
+            $dump[] = 'unique unknowns: ' . (microtime(true) - $time_now);
 
+            // dump($dump);
+
+            $term_repo->flush();
             $term_repo->clear();
         }
 
