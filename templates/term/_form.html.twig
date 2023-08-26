@@ -40,7 +40,7 @@
 
   <tr>
     <td>
-      <ul id="myTags">
+      <ul id="myTags" class="tags nomarginblock  shorttaglist">
       </ul>
     </td>
   </tr>
@@ -71,7 +71,7 @@
   {# manually write list so it can be managed by tagit. #}
   <tr>
     <td>
-      <ul id="termtagslist" class="tags nomarginblock">
+      <ul id="termtagslist" class="tags nomarginblock shorttaglist">
         {% for termTag in form.termTags %}
         <li>
           {{ termTag.vars.value }}
@@ -142,8 +142,9 @@
     var prototypeFieldName = 'term_dto[termParents][__name__]';
     var fieldIndex = 0;
 
-    $("#myTags").tagit(
+    $('#myTags').tagit(
       {
+        placeholderText: 'Parents',
         beforeTagAdded: function (_event, ui) {
           fieldIndex++;
           $(this).tagit({fieldName: prototypeFieldName.replace('__name__', fieldIndex)});
