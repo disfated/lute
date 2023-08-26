@@ -40,6 +40,16 @@
 
   <tr>
     <td>
+      <ul id="myTags">
+        <!-- Existing list items will be pre-added to the tags -->
+        <li>Tag1</li>
+        <li>Tag2</li>
+      </ul>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
       {{ form_widget(form.Romanization, {'label':false}) }}
     </td>
   </tr>
@@ -131,6 +141,22 @@
     });
   };
 
+  let setup_hack_Tagit = function() {
+    var prototypeFieldName = 'term_dto[termParents][__name__]';
+    var fieldIndex = 0;
+
+    $("#myTags").tagit(
+      {
+        beforeTagAdded: function (_event, ui) {
+          fieldIndex++;
+          $(this).tagit({fieldName: prototypeFieldName.replace('__name__', fieldIndex)});
+        },
+      }
+    );
+
+  };
+
+
   let setupTagit = function() {
     // term_dto is what symfony calls the form.
     var prototypeFieldName = 'term_dto[termTags][__name__]';
@@ -169,6 +195,7 @@
 
   }
   $(document).ready(function () {
+    setup_hack_Tagit();
     setupTagit();
     set_up_parent_autocomplete();
 
