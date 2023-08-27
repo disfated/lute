@@ -51,10 +51,6 @@ class Term
     #[ORM\InverseJoinColumn(name: 'WpParentWoID', referencedColumnName: 'WoID')]
     #[ORM\ManyToMany(targetEntity: Term::class, inversedBy:'children', cascade: ['persist'], fetch: 'EAGER')]
     private Collection $parents;
-    /* Really, a word can have only one parent, but since we have a
-       join table, I'll treat it like a many-to-many join in the
-       private members, but the interface will only have setParent()
-       and getParent(). */
 
     #[ORM\JoinTable(name: 'wordparents')]
     #[ORM\JoinColumn(name: 'WpParentWoID', referencedColumnName: 'WoID')]
@@ -239,35 +235,31 @@ class Term
     /**
      * @return Term or null
      */
-    public function getParent(): ?Term
+    public function getParents(): Collection
     {
-        if ($this->parents->isEmpty()) {
-            return null;
-        }
+        return $this->parents;
+    }
 
-        // The last element in the array is the current active parent.
-        $p = $this->parents->last();
-        if ($p == false) {
-            return null;
-        }
-        else {
-            return $p;
+    public function removeAllParents(): void {
+        foreach ($this->parents as $p) {
+            $this->removeParent($p);
         }
     }
 
-    public function setParent(?Term $parent): self
+    public function addParent(Term $parent): self
     {
-        $p = $this->getParent();
-        if ($p != null) {
-            $this->parents->removeElement($p);
-            $p->getChildren()->removeElement($this);
-        }
-        if ($parent != null) {
-            /**
-             * @psalm-suppress InvalidArgument
-             */
+        if (!$this->parents->contains($parent)) {
             $this->parents->add($parent);
             $parent->children[] = $this;
+        }
+        return $this;
+    }
+
+    public function removeParent(Term $parent): self
+    {
+        if ($this->parents->contains($parent)) {
+            $this->parents->removeElement($parent);
+            $parent->children->removeElement($this);
         }
         return $this;
     }
@@ -327,12 +319,9 @@ class Term
         $f->CurrentImage = $this->getCurrentImage();
         $f->FlashMessage = $this->getFlashMessage();
 
-        $p = $this->getParent();
-        if ($p != null) {
-            $f->ParentID = $p->getID();
-            $f->ParentText = $p->getText();
+        foreach ($this->getParents() as $p) {
+            $f->parents[] = $p->getText();
         }
-
 
         if (($f->Romanization ?? '') == '') {
             $f->Romanization = $f->language->getParser()->getReading($f->Text);

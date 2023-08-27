@@ -22,19 +22,17 @@
     </td>
   </tr>
 
+  {% do form.termParents.setRendered %}
+  {# manually write list so it can be managed by tagit. #}
   <tr>
     <td>
-      {{ form_widget(form.ParentText) }}
-      {{ form_widget(form.ParentID, {'label':false}) }}
-    </td>
-    <td>
-      {% if not form.ParentID.vars.value is empty %}
-      {% if parent_link_to_frame ?? false %}
-      <a href="/read/termform/{{form.language.vars.value}}/{{form.ParentText.vars.value}}">&gt;</a>
-      {% else %}
-      <a href="/term/{{form.ParentID.vars.value}}/edit">&gt;</a>
-      {% endif %}
-      {% endif %}
+      <ul id="parentslist" class="tags nomarginblock shorttaglist">
+        {% for p in form.termParents %}
+        <li>
+          {{ p.vars.value }}
+        </li>
+        {% endfor %}
+      </ul>
     </td>
   </tr>
 
@@ -94,55 +92,12 @@
 {{ form_end(form) }}
 
 <script type="text/javascript">
-  
-  let set_parent_fields = function(event, ui) {
-    if (ui.item == null) {
-      // console.log('directly entered text, nothing to do.');
-      return;
-    }
-    $('#term_dto_ParentText').val(ui.item.word);
-    return false;
-  };
-  
-  let set_up_parent_autocomplete = function() {
-    $("#term_dto_ParentText").autocomplete({
-      source: function(request, response) {
-        const s = encodeURIComponent(request.term);
-        const langid = parseInt($('#term_dto_language').val());
-        $.ajax({
-          url: `/term/search/${s}/${langid}`,
-          type: 'GET',
-          dataType: 'json',
-          minLength: 2,
-          success: function(data) {
-            arr = data.map(function(word) {
-              let label = word.text;
-              if (word.translation != null && word.translation != '') {
-                label = `${label} (${word.translation})`;
-              }
-              const obj = {
-                label: label,
-                value: word.id,
-                word: word.text,
-                translation: word.translation
-              };
-              return obj;
-            });
-            response(arr, data);
-          }
-        })
-      },
-      select: set_parent_fields,
-      focus: set_parent_fields,
-      change: set_parent_fields
-    });
-  };
 
-  let setup_hack_Tagit = function() {
+  let setup_parent_Tagit = function() {
     var prototypeFieldName = 'term_dto[termParents][__name__]';
     var fieldIndex = 0;
 
-    $('#myTags').tagit(
+    $('#parentslist').tagit(
       {
         placeholderText: 'Parents',
         beforeTagAdded: function (_event, ui) {
@@ -221,9 +176,8 @@
 
   }
   $(document).ready(function () {
-    setup_hack_Tagit();
+    setup_parent_Tagit();
     setupTagit();
-    set_up_parent_autocomplete();
 
     // Approx good size for the text area:
     $('#term_dto_Translation').css({'width': '500px', 'height': '43px'});
