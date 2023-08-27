@@ -82,7 +82,7 @@ class ReadingContext
         return '#' . $n->attr('id');
     }
 
-    public function updateTermForm($expected_Text, $updates) {
+    public function updateTermForm($expected_Text, $updates, $tags = []) {
         $crawler = $this->client->refreshCrawler();
         $frames = $crawler->filter("#reading-frames-right iframe");
         $this->client->switchTo()->frame($frames);
@@ -97,6 +97,15 @@ class ReadingContext
         foreach (array_keys($updates) as $f) {
             $form["term_dto[{$f}]"] = $updates[$f];
         }
+
+        if (count($tags) > 0) {
+            $fs = 'ul#termtagslist li.tagit-new > input.ui-autocomplete-input';
+            $tt = $crawler->filter($fs);
+            \PHPUnit\Framework\Assert::assertEquals(1, count($tt), 'found single tag input');
+            $input = $tt->eq(0);
+            $input->sendkeys(implode(' ', $tags));
+        }
+
         $crawler = $this->client->submit($form);
         usleep(300 * 1000);
     }

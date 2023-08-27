@@ -15,6 +15,9 @@ class Reading_Test extends AcceptanceTestBase
         $this->load_languages();
     }
 
+    /**
+     * @group readingtermupdate
+     */
     public function test_reading_with_term_updates(): void
     {
         $this->make_text("Hola", "Hola. Adios amigo.", $this->spanish);
@@ -30,7 +33,7 @@ class Reading_Test extends AcceptanceTestBase
         $ctx->clickReadingWord('Hola');
 
         $updates = [ 'Translation' => 'hello', 'ParentText' => 'adios' ];
-        $ctx->updateTermForm('hola', $updates);
+        $ctx->updateTermForm('hola', $updates, [ 'some', 'tags']);
 
         $ctx->assertDisplayedTextEquals('Hola/. /Adios/ /amigo/.');
         $ctx->assertWordDataEquals('Hola', 'status1');
