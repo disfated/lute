@@ -1,8 +1,8 @@
 <p>
   <b style="font-size:120%">
     {{ term.Text }}
-    {% if term.Parent %}
-    ({{ term.Parent.Text }})
+    {% if parentdata | length > 0 %}
+    ({{ parentterms }})
     {% endif %}
   </b>
 </p>
