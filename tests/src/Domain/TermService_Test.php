@@ -94,7 +94,7 @@ final class TermService_Test extends DatabaseTestBase
 
         $p = new Term($this->spanish, 'perro');
         $t = new Term($this->spanish, 'perros');
-        $t->setParent($p);
+        $t->addParent($p);
         $t->addTermTag(TermTag::makeTermTag('noun'));
         $this->term_service->add($t);
 
@@ -121,7 +121,7 @@ final class TermService_Test extends DatabaseTestBase
         $this->term_service->add($p);
 
         $perros = new Term($this->spanish, 'perros');
-        $perros->setParent($p);
+        $perros->addParent($p);
         $this->term_service->add($perros);
 
         $f = $this->term_service->find('perros', $this->spanish);
@@ -149,7 +149,7 @@ final class TermService_Test extends DatabaseTestBase
     public function test_remove_term_leaves_parent_breaks_wordparent_association() {
         $p = new Term($this->spanish, 'perro');
         $t = new Term($this->spanish, 'perros');
-        $t->setParent($p);
+        $t->addParent($p);
         $t->addTermTag(TermTag::makeTermTag('noun'));
         $this->term_service->add($t);
 
@@ -173,7 +173,7 @@ final class TermService_Test extends DatabaseTestBase
         $p = new Term($this->spanish, 'perro');
         $t = new Term($this->spanish, 'perros');
         $t->setText('perros');
-        $t->setParent($p);
+        $t->addParent($p);
         $t->addTermTag(TermTag::makeTermTag('noun'));
         $this->term_service->add($t);
 
@@ -199,19 +199,19 @@ final class TermService_Test extends DatabaseTestBase
         $this->term_service->add($gato, true);
 
         $t = new Term($this->spanish, 'perros');
-        $t->setParent($parent);
+        $t->addParent($parent);
         $this->term_service->add($t, true);
 
         $expected = [ "{$t->getID()}; {$parent->getID()}" ];
         DbHelpers::assertTableContains("select WpWoID, WpParentWoID from wordparents", $expected, "parent set");
 
-        $t->setParent($gato);
+        $t->addParent($gato);
         $this->term_service->add($t, true);
 
         $expected = [ "{$t->getID()}; {$gato->getID()}" ];
         DbHelpers::assertTableContains("select WpWoID, WpParentWoID from wordparents", $expected, "NEW parent set");
 
-        $t->setParent(null);
+        $t->addParent(null);
         $this->term_service->add($t, true);
         DbHelpers::assertRecordcountEquals('select * from wordparents', 0, 'no assocs');
 
@@ -368,8 +368,8 @@ final class TermService_Test extends DatabaseTestBase
         }
 
         [ $tengo, $tiene, $tener ] = $this->addTerms($this->spanish, ['tengo', 'tiene', 'tener']);
-        $tengo->setParent($tener);
-        $tiene->setParent($tener);
+        $tengo->addParent($tener);
+        $tiene->addParent($tener);
         $this->term_service->add($tener, true);
         $this->term_service->add($tiene, true);
 
@@ -414,8 +414,8 @@ final class TermService_Test extends DatabaseTestBase
         }
 
         [ $tengo, $tiene, $tener ] = $this->addTerms($this->spanish, ['tengo', 'tiene', 'tener']);
-        $tengo->setParent($tener);
-        $tiene->setParent($tener);
+        $tengo->addParent($tener);
+        $tiene->addParent($tener);
         $this->term_service->add($tener, true);
         $this->term_service->add($tiene, true);
 

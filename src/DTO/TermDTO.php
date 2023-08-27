@@ -34,6 +34,7 @@ class TermDTO
 
     public function __construct()
     {
+        $this->termParents = array();
         $this->termTags = array();
     }
 

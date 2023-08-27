@@ -104,7 +104,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $dto = new TermDTO();
         $dto->language = $this->spanish;
         $dto->Text = 'perros';
-        $dto->ParentText = 'perro';
+        $dto->termParents = ['perro'];
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
 
@@ -128,7 +128,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $dto->Text = 'perros';
         $dto->CurrentImage = 'someimage.jpeg';
         $dto->Translation = 'transl';
-        $dto->ParentText = 'perro';
+        $dto->termParents = ['perro'];
         $dto->termTags[] = 'newtag';
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
@@ -152,7 +152,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $dto = new TermDTO();
         $dto->language = $this->spanish;
         $dto->Text = 'perro';
-        $dto->ParentText = 'perro';
+        $dto->termParents = ['perro'];
         $perro = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
         $this->assertEquals(count($perro->getParents()), 0, 'no parent');
     }
@@ -169,7 +169,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $dto = new TermDTO();
         $dto->language = $this->spanish;
         $dto->Text = 'perros';
-        $dto->ParentText = 'perro';
+        $dto->termParents = ['perro'];
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
 
@@ -190,7 +190,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $dto->language = $this->spanish;
         $dto->Text = 'perros';
         $dto->Translation = 'translation';
-        $dto->ParentText = 'perro';
+        $dto->termParents = ['perro'];
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
 
@@ -202,7 +202,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $perrito_dto->language = $this->spanish;
         $perrito_dto->Text = 'perrito';
         $perrito_dto->Translation = 'small dog';
-        $perrito_dto->ParentText = 'perro';
+        $perrito_dto->termParents = ['perro'];
         $perrito = TermDTO::buildTerm($perrito_dto, $this->term_service, $this->termtag_repo);
 
         $parent = $perrito->getParent();
@@ -287,7 +287,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $dto = new TermDTO();
         $dto->language = $this->spanish;
         $dto->Text = 'perros';
-        $dto->ParentText = 'perro';
+        $dto->termParents = ['perro'];
         $dto->termTags[] = 'hi';
 
         $t = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
