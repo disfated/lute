@@ -320,7 +320,7 @@ class Term
         $f->FlashMessage = $this->getFlashMessage();
 
         foreach ($this->getParents() as $p) {
-            $f->parents[] = $p->getText();
+            $f->termParents[] = $p->getText();
         }
 
         if (($f->Romanization ?? '') == '') {

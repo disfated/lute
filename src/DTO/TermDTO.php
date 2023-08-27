@@ -43,6 +43,7 @@ class TermDTO
      */
     public static function buildTerm(TermDTO $dto, TermService $term_service, TermTagRepository $ttr): Term
     {
+        dump('hi there');
         if (is_null($dto->language)) {
             throw new \Exception('Language not set for term dto');
         }
@@ -75,11 +76,15 @@ class TermDTO
             $dto->termParents,
             fn($p) => $p != null && $p != '' && mb_strtolower($dto->Text) != mb_strtolower($p)
         );
+        dump('creating parents:');
+        dump($createparents);
         foreach ($createparents as $p) {
-            $termparents = TermDTO::findOrCreateParent(mb_strtolower($p), $dto, $term_service, $termtags);
+            dump($p);
+            $termparents[] = TermDTO::findOrCreateParent(mb_strtolower($p), $dto, $term_service, $termtags);
         }
         $t->removeAllParents();
         foreach ($termparents as $tp) {
+            dump('adding parent ' . $tp->getText());
             $t->addParent($tp);
         }
 
