@@ -40,6 +40,32 @@ class Reading_Test extends AcceptanceTestBase
         $ctx->assertWordDataEquals('Adios', 'status1');
     }
 
+    /**
+     * @group readingtermmultipleparents
+     */
+    public function test_reading_with_term_multiple_parents_updates(): void
+    {
+        $this->make_text("Hola", "Hola. Adios amigo.", $this->spanish);
+        $this->client->request('GET', '/');
+
+        $this->assertPageTitleContains('LUTE');
+        $this->assertSelectorTextContains('body', 'Learning Using Texts (LUTE)');
+        $this->client->clickLink('Hola');
+        $this->assertPageTitleContains('Reading "Hola (1/1)"');
+
+        $ctx = $this->getReadingContext();
+        $ctx->assertDisplayedTextEquals('Hola/. /Adios/ /amigo/.');
+        $ctx->clickReadingWord('Hola');
+
+        $updates = [ 'Translation' => 'hello' ];
+        $ctx->updateTermForm('hola', $updates, [ 'some', 'tags'], [ 'adios', 'amigo' ]);
+
+        $ctx->assertDisplayedTextEquals('Hola/. /Adios/ /amigo/.');
+        $ctx->assertWordDataEquals('Hola', 'status1');
+        $ctx->assertWordDataEquals('Adios', 'status1');
+        $ctx->assertWordDataEquals('amigo', 'status1');
+    }
+
     public function test_create_multiword_term(): void
     {
         $this->make_text("Hola", "Hola. Adios amigo.", $this->spanish);
