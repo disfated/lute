@@ -51,10 +51,6 @@ class TermController extends AbstractController
         $parenttext = trim($parameters['parenttext']);
         $langid = intval($parameters['langid']);
 
-        // dump($wordids);
-        // dump($parenttext);
-        // dump($langid);
-
         $lang = $lang_repo->find($langid);
         $parent = null;
         if ($parenttext != '') {
@@ -73,7 +69,8 @@ class TermController extends AbstractController
             fn($t) => ($t->getLanguage()->getLgID() == $langid) && ($t->getID() != $pid)
         );
         foreach ($update as $t) {
-            $t->setParent($parent);
+            $t->removeAllParents();
+            $t->addParent($parent);
             $term_repo->save($t, true);
         }
         return $this->json('ok');

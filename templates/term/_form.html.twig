@@ -255,13 +255,11 @@
   /**
    * Either open a new window, or show the result in the correct frame.
    */
-  let show_lookup_page = function(dicturl, text, parent_text, langid, allow_open_new_web_page = true) {
+  let show_lookup_page = function(dicturl, text, langid, allow_open_new_web_page = true) {
 
     const is_bing = (dicturl.indexOf('www.bing.com') != -1);
     if (is_bing) {
       let use_text = text;
-      if (parent_text != null && parent_text != '')
-        use_text = parent_text;
       const binghash = dicturl.replace('https://www.bing.com/images/search?', '');
       const url = `/bing/search/${langid}/${encodeURIComponent(use_text)}/${encodeURIComponent(binghash)}`;
       top.frames.dictframe.location.href = url;
@@ -300,24 +298,12 @@
 
     const termdicts = LANGUAGES[langid].term;
     const usedict = termdicts[termdictindex];
-    show_lookup_page(usedict, $('#term_dto_Text').val(), $('#term_dto_ParentText').val(), langid, allow_open_new_web_page);
+    show_lookup_page(usedict, $('#term_dto_Text').val(), langid, allow_open_new_web_page);
 
     termdictindex++;
     if (termdictindex >= termdicts.length)
       termdictindex = 0;
   }
-
-  function do_sentence_lookup() {
-    const langid = $('#term_dto_language').val();
-    if (langid == null || langid == '' || parseInt(langid) == 0) {
-      alert('Please select a language.');
-      return;
-    }
-
-    const usedict = LANGUAGES[langid].sentence;
-    show_lookup_page(usedict, $('#term_dto_Sentence').val(), $('#term_dto_ParentText').val(), langid);
-  }
-
 
   function show_term_sentences() {
     const langid = $('#term_dto_language').val();
