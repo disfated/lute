@@ -179,10 +179,8 @@ class TermController extends AbstractController
             return mb_strtoupper($firstChar, $encoding) . $then;
         };
 
-        $ptext = 'Parent';
-        $p = $term->getParent();
-        if ($p != null)
-            $ptext = $mb_ucfirst($p->getText());
+        $ptext = 'Parent TODO';
+        // TODO:parent - fix this
 
         $references = [
             $mb_ucfirst($term->getText()) => $refs['term'],

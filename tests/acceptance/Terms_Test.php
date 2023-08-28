@@ -59,7 +59,7 @@ class Terms_Test extends AcceptanceTestBase
         $updates = [
             'language' => $this->spanish->getLgID(),
             'Text' => 'gatos',
-            'ParentText' => 'gato',
+            'Parents' => ['gato'],
             'Translation' => 'cat'
         ];
         $ctx = $this->getTermContext();
@@ -75,7 +75,6 @@ class Terms_Test extends AcceptanceTestBase
         $crawler = $this->client->refreshCrawler();
         $form = $crawler->selectButton('Update')->form();
         $this->assertEquals($form['term_dto[Text]']->getValue(), 'gatos', 'same term found');
-        $this->assertEquals($form['term_dto[ParentText]']->getValue(), 'gato', 'parent set');
     }
 
     /**
@@ -92,7 +91,7 @@ class Terms_Test extends AcceptanceTestBase
         $updates = [
             'language' => $this->spanish->getLgID(),
             'Text' => 'gatos',
-            'ParentText' => 'gato',
+            'Parents' => ['gato'],
             'Translation' => 'cat'
         ];
         $ctx->updateTermForm($updates);

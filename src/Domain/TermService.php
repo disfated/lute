@@ -31,16 +31,6 @@ class TermService {
     }
 
     public function flush() {
-        /* * /
-        $msg = 'flushing ' . count($this->pendingTerms) . ' terms: ';
-        foreach ($this->pendingTerms as $t) {
-            $msg .= $t->getText();
-            if ($t->getParent() != null)
-                $msg .= " (parent " . $t->getParent()->getText() . ")";
-            $msg .= ', ';
-        }
-        // dump($msg);
-        /* */
         $this->term_repo->flush();
         $this->pendingTerms = array();
     }
@@ -148,7 +138,8 @@ class TermService {
     public function findReferences(Term $term): array
     {
         $conn = Connection::getFromEnvironment();
-        $p = $term->getParent();
+        $p = $term->getParents()[0];
+        // TODO:parent fix this, need all parent refs somehow.
         $ret = [
             'term' => $this->getReferences($term, $conn),
             'parent' => $this->getReferences($p, $conn),

@@ -82,7 +82,7 @@ class ReadingContext
         return '#' . $n->attr('id');
     }
 
-    public function updateTermForm($expected_Text, $updates, $tags = []) {
+    public function updateTermForm($expected_Text, $updates) {
         $crawler = $this->client->refreshCrawler();
         $frames = $crawler->filter("#reading-frames-right iframe");
         $this->client->switchTo()->frame($frames);
@@ -94,16 +94,28 @@ class ReadingContext
         $actual = str_replace($zws, '', $loaded);
         \PHPUnit\Framework\Assert::assertEquals($actual, $expected_Text, 'text pre-loaded');
 
-        foreach (array_keys($updates) as $f) {
+        $checkkeys = array_keys($updates);
+        $checkkeys = array_filter($updates, fn($s) => $s != 'Tags' && s != 'Parents');
+        foreach ($checkkeys as $f) {
             $form["term_dto[{$f}]"] = $updates[$f];
         }
 
+        $tags = $updates['Tags'];
         if (count($tags) > 0) {
             $fs = 'ul#termtagslist li.tagit-new > input.ui-autocomplete-input';
             $tt = $crawler->filter($fs);
             \PHPUnit\Framework\Assert::assertEquals(1, count($tt), 'found single tag input');
             $input = $tt->eq(0);
             $input->sendkeys(implode(' ', $tags));
+        }
+
+        $parents = $updates['Parents'];
+        if (count($parents) > 0) {
+            $fs = 'ul#parentslist li.tagit-new > input.ui-autocomplete-input';
+            $tt = $crawler->filter($fs);
+            \PHPUnit\Framework\Assert::assertEquals(1, count($tt), 'found single parent input');
+            $input = $tt->eq(0);
+            $input->sendkeys(implode(' ', $parents));
         }
 
         $crawler = $this->client->submit($form);

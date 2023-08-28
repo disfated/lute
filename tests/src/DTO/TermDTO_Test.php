@@ -173,7 +173,7 @@ final class TermDTO_Test extends DatabaseTestBase
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
 
-        $parent = $perros->getParent();
+        $parent = $perros->getParents()[0];
         $this->assertTrue($parent != null, 'have parent');
         $this->assertEquals($parent->getText(), 'perro', 'which is perro');
         $this->assertEquals($parent->getID(), $p->getID(), 'existing perro found');
@@ -194,7 +194,7 @@ final class TermDTO_Test extends DatabaseTestBase
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
 
-        $parent = $perros->getParent();
+        $parent = $perros->getsParents()[0];
         $this->assertEquals($parent->getText(), 'perro', 'which is perro');
         $this->assertEquals($parent->getTranslation(), 'translation', 'translation applied');
 
@@ -205,7 +205,7 @@ final class TermDTO_Test extends DatabaseTestBase
         $perrito_dto->termParents = ['perro'];
         $perrito = TermDTO::buildTerm($perrito_dto, $this->term_service, $this->termtag_repo);
 
-        $parent = $perrito->getParent();
+        $parent = $perrito->getParents()[0];
         $this->assertEquals($parent->getText(), 'perro', 'which is perro');
         $this->assertEquals($parent->getTranslation(), 'translation', 'existing transl kept');
     }

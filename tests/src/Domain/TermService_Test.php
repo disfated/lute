@@ -125,7 +125,7 @@ final class TermService_Test extends DatabaseTestBase
         $this->term_service->add($perros);
 
         $f = $this->term_service->find('perros', $this->spanish);
-        $this->assertEquals($perros->getParent()->getID(), $p->getID(), 'parent set');
+        $this->assertEquals($perros->getParents()[0]->getID(), $p->getID(), 'parent set');
     }
 
     public function test_remove_term_removes_term() {
