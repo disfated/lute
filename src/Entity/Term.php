@@ -233,7 +233,7 @@ class Term
     }
 
     /**
-     * @return Term or null
+     * @return Collection<int, Term>
      */
     public function getParents(): Collection
     {
