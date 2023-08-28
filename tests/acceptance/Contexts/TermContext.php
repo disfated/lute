@@ -42,12 +42,18 @@ class TermContext
         $form = $crawler->selectButton('Update')->form();
 
         $checkkeys = array_keys($updates);
-        $checkkeys = array_filter($updates, fn($s) => $s != 'Tags' && s != 'Parents');
+        $checkkeys = array_filter($checkkeys, fn($s) => $s != 'Tags' && $s != 'Parents');
         foreach ($checkkeys as $f) {
             $form["term_dto[{$f}]"] = $updates[$f];
         }
 
-        $tags = $updates['Tags'];
+        $valOrEmpty = function($key, $arr) {
+            if (! array_key_exists($key, $arr))
+                return [];
+            return $arr[$key];
+        };
+
+        $tags = $valOrEmpty('Tags', $updates);
         if (count($tags) > 0) {
             $fs = 'ul#termtagslist li.tagit-new > input.ui-autocomplete-input';
             $tt = $crawler->filter($fs);
@@ -56,7 +62,7 @@ class TermContext
             $input->sendkeys(implode(' ', $tags));
         }
 
-        $parents = $updates['Parents'];
+        $parents = $valOrEmpty('Parents', $updates);
         if (count($parents) > 0) {
             $fs = 'ul#parentslist li.tagit-new > input.ui-autocomplete-input';
             $tt = $crawler->filter($fs);
