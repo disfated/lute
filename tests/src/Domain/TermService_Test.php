@@ -208,12 +208,13 @@ final class TermService_Test extends DatabaseTestBase
         $t->addParent($gato);
         $this->term_service->add($t, true);
 
-        $expected = [ "{$t->getID()}; {$gato->getID()}" ];
-        DbHelpers::assertTableContains("select WpWoID, WpParentWoID from wordparents", $expected, "NEW parent set");
+        $expected = [ "{$t->getID()}; {$parent->getID()}",
+                      "{$t->getID()}; {$gato->getID()}" ];
+        DbHelpers::assertTableContains("select WpWoID, WpParentWoID from wordparents", $expected, "NEW parent added");
 
-        $t->addParent(null);
+        $t->removeAllParents();
         $this->term_service->add($t, true);
-        DbHelpers::assertRecordcountEquals('select * from wordparents', 0, 'no assocs');
+        DbHelpers::assertRecordcountEquals('select * from wordparents', 0, 'all removed');
 
         foreach(['perros', 'perro', 'gato'] as $s) {
             $f = $this->term_service->find($s, $this->spanish);

@@ -194,7 +194,7 @@ final class TermDTO_Test extends DatabaseTestBase
 
         $perros = TermDTO::buildTerm($dto, $this->term_service, $this->termtag_repo);
 
-        $parent = $perros->getsParents()[0];
+        $parent = $perros->getParents()[0];
         $this->assertEquals($parent->getText(), 'perro', 'which is perro');
         $this->assertEquals($parent->getTranslation(), 'translation', 'translation applied');
 
